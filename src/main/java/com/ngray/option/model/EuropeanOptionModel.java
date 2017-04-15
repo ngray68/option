@@ -10,6 +10,7 @@ import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataCollection;
 import com.ngray.option.marketdata.MarketDataException;
 import com.ngray.option.marketdata.MarketData.Type;
+import com.ngray.option.risk.Risk;
 
 public class EuropeanOptionModel implements Model {
 

@@ -1,4 +1,4 @@
-package com.ngray.option.model;
+package com.ngray.option.risk;
 
 /**
  * Class encapsulating a consisent set of value/risk numbers

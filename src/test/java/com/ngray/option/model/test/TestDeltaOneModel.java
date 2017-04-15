@@ -14,7 +14,7 @@ import com.ngray.option.marketdata.MarketDataCollection;
 import com.ngray.option.marketdata.MarketDataException;
 import com.ngray.option.model.DeltaOneModel;
 import com.ngray.option.model.ModelException;
-import com.ngray.option.model.Risk;
+import com.ngray.option.risk.Risk;
 
 public class TestDeltaOneModel {
 

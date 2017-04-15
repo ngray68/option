@@ -13,7 +13,7 @@ import com.ngray.option.marketdata.MarketDataCollection;
 import com.ngray.option.marketdata.MarketDataException;
 import com.ngray.option.model.EuropeanOptionModel;
 import com.ngray.option.model.ModelException;
-import com.ngray.option.model.Risk;
+import com.ngray.option.risk.Risk;
 
 import static org.mockito.Mockito.*;
 

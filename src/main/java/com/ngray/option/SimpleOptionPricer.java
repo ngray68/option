@@ -17,7 +17,7 @@ import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataCollection;
 import com.ngray.option.model.ModelException;
-import com.ngray.option.model.Risk;
+import com.ngray.option.risk.Risk;
 
 /**
  * SimpleOptionPricer - simple command line option pricing
@@ -45,7 +45,6 @@ public class SimpleOptionPricer {
 	public static void main(String[] args) {	
 		try {
 			Config config = parseArgs(args);
-			
 			Security underlying = new Security("Underlying");
 			EuropeanOption option = new EuropeanOption("Option", underlying, config.strike, config.expiryDate, config.putOrCall);
 			Map<FinancialInstrument, MarketData> prices = new HashMap<>();

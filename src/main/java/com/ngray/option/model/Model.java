@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.marketdata.MarketDataCollection;
+import com.ngray.option.risk.Risk;
 
 public interface Model {
 	

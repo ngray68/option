@@ -14,6 +14,11 @@ public class MarketData {
 		this.value = value;
 		this.type = type;
 	}
+	
+	@Override
+	public String toString() {
+		return "MarketData: Value=" + value + "\tType=" + type;
+	}
 
 	public double getValue() {
 		return value;
