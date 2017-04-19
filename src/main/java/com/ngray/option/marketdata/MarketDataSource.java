@@ -4,6 +4,6 @@ import com.ngray.option.financialinstrument.FinancialInstrument;
 
 public interface MarketDataSource {
 	
-	public void publishMarketData(MarketDataService service, FinancialInstrument instrument, MarketData marketData);
+	public void publishMarketData(FinancialInstrument instrument, MarketData marketData);
 
 }

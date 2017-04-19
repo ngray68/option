@@ -1,15 +1,23 @@
 package com.ngray.option.financialinstrument;
 
+import com.ngray.option.ig.market.Market;
 import com.ngray.option.model.DeltaOneModel;
 import com.ngray.option.model.Model;
 
 public class Security extends FinancialInstrument {
 
 	
+	private Market igMarket;
+
 	public Security(String identifier) {
 		super(identifier);
 	}
 	
+	public Security(Market market) {
+		super(market.getInstrumentName());
+		this.igMarket = market;
+	}
+
 	// Overrides from Object
 	@Override
 	public String toString() {

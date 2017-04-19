@@ -2,6 +2,10 @@ package com.ngray.option.financialinstrument;
 
 import java.time.LocalDate;
 
+import com.ngray.option.ig.market.Market;
+import com.ngray.option.ig.refdata.MissingReferenceDataException;
+import com.ngray.option.ig.refdata.OptionReferenceData;
+import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.model.EuropeanOptionModel;
 import com.ngray.option.model.Model;
 
@@ -13,7 +17,7 @@ import com.ngray.option.model.Model;
  */
 public class EuropeanOption extends FinancialInstrument {
 
-	private final Security underyling;
+	private final Security underlying;
 	private final double strike;
 	private final LocalDate expiryDate;
 	private final Type type;
@@ -33,10 +37,19 @@ public class EuropeanOption extends FinancialInstrument {
 	 */
 	public EuropeanOption(String identifier, Security underlying, double strike, LocalDate expiryDate, Type type) {
 		super(identifier);
-		this.underyling = underlying;
+		this.underlying = underlying;
 		this.strike = strike;
 		this.expiryDate = expiryDate;
 		this.type = type;
+	}
+	
+	public EuropeanOption(Market market) throws MissingReferenceDataException {
+		super(market.getInstrumentName());
+		OptionReferenceData refData = OptionReferenceDataMap.getOptionReferenceData(market.getInstrumentName());
+		this.underlying = refData.getUnderlying();
+		this.strike = refData.getStrike();
+		this.expiryDate = refData.getExpiryDate();
+		this.type = refData.getCallOrPut();		
 	}
 	
 	// Overrides from Object
@@ -84,7 +97,7 @@ public class EuropeanOption extends FinancialInstrument {
 	 * @return
 	 */
 	public Security getUnderlying() {
-		return underyling;
+		return underlying;
 	}
 
 	/**

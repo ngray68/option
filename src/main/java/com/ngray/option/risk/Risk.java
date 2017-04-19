@@ -26,6 +26,27 @@ public class Risk {
 		this.impliedVolatility = impliedVolatility;
 	}
 
+	public Risk() {
+		this.value = Double.NaN;
+		this.delta = Double.NaN;
+		this.gamma = Double.NaN;
+		this.vega = Double.NaN;
+		this.theta = Double.NaN;
+		this.rho = Double.NaN;
+		this.impliedVolatility = Double.NaN;
+	}
+	
+	public Risk multiply(double N) {
+		double value = getValue() * N;
+		double delta = getDelta() * N;
+		double gamma = getGamma() * N;
+		double vega = getVega() * N;
+		double rho = getRho() * N;
+		double theta = getTheta() * N;
+		double impliedVol = getImpliedVolatility(); // this doesn't scale with position sze
+		return new Risk(value, delta, gamma, vega, theta, rho, impliedVol);
+	}
+
 	public double getValue() {
 		return value;
 	}

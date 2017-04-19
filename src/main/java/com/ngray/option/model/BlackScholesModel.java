@@ -79,9 +79,10 @@ public class BlackScholesModel {
 		double highVol = 5.0;
 		double lowVol = 0.0;
 		
-		while (highVol - lowVol > 0.0001) {
+		while (Double.compare(highVol - lowVol, 0.0001) > 0) {
 			double volGuess = (highVol+lowVol)/2;
-			double error = calcCallOptionPrice(spot, strike, volGuess, timeToExpiry, riskFreeRate, dividendYield) - optionPrice;
+			double optionPriceGuess = calcCallOptionPrice(spot, strike, volGuess, timeToExpiry, riskFreeRate, dividendYield);
+			double error = optionPriceGuess - optionPrice;
 			if (error > 0.0) {
 				highVol = volGuess;
 			} else {

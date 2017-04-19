@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.FinancialInstrument;
@@ -30,15 +32,26 @@ public class MarketDataService {
 	 */
 	private final Map<FinancialInstrument, List<MarketDataListener>> listeners;
 	
-
+	/**
+	 * Market data sources
+	 */
+	private final Map<FinancialInstrument, MarketDataSource> sources;
+	
+	/**
+	 * Thread pool for market data source
+	 */
+	private final ExecutorService executor;
+	
 	/**
 	 * Create a Market data service with the specified name
 	 * @param name
 	 */
 	public MarketDataService(String name) {
-		Log.getLogger().info("Constructing MarketDataService: " + name);
+		Log.getLogger().info("MarketDataService: Constructing service: " + name);
 		cache = new MarketDataCache(name);
 		listeners = new HashMap<>();
+		sources = new HashMap<>();
+		executor = Executors.newCachedThreadPool();
 	}
 	
 	/**
@@ -56,16 +69,20 @@ public class MarketDataService {
 	 * @return
 	 */
 	public MarketDataListener addListener(FinancialInstrument instrument, MarketDataListener listener) {
-		Log.getLogger().info("Adding subscription for " + instrument);
+		Log.getLogger().info("MarketDataService: " + getName() + "\tAdding subscription for " + instrument);
 		if (instrument == null || listener == null) return null;
 		
 		synchronized(listenerLock) {	
 			if (!listeners.containsKey(instrument)) {
-				Log.getLogger().debug("Creating new subscription list for Instrument " + instrument);
+				Log.getLogger().debug("MarketDataService: " + getName() + "\tCreating new subscription list for instrument " + instrument);
 				listeners.put(instrument, new ArrayList<>());
+				
+				// we also add a market data source for the instrument here, and start the source running
+				sources.put(instrument,  new DummyMarketDataSource(instrument.getIdentifier(), instrument, this));
+				executor.execute((Runnable)sources.get(instrument));
 			}
 			
-			Log.getLogger().debug("Adding subscription to list for for " + instrument);
+			Log.getLogger().debug("MarketDataService: " + getName() + "\tAdding subscription to list for for " + instrument);
 			listeners.get(instrument).add(listener);
 		}
 		
@@ -78,12 +95,20 @@ public class MarketDataService {
 	 * @param listener
 	 */
 	public void removeListener(FinancialInstrument instrument, MarketDataListener listener) {
-		Log.getLogger().info("Removing subscription for " + instrument);
+		Log.getLogger().info("MarketDataService: " + getName() + "\tRemoving subscription for " + instrument);
 		if(instrument == null || listener == null) return;
 		
 		synchronized(listenerLock) {
 			if (listeners.containsKey(instrument)) {
 				listeners.get(instrument).remove(listener);
+			}
+			
+			// if we have no more subscriptions, we no longer need the market data
+			// TODO - stop the market data source threads when we don't need them
+			if (listeners.get(instrument).isEmpty()) {
+				Log.getLogger().debug("MarketDataService: " + getName() + "\tRemoving market data source for instrument " + instrument);
+				((DummyMarketDataSource)sources.remove(instrument)).shutdown();
+				listeners.remove(instrument);
 			}
 		}
 	}
@@ -92,8 +117,8 @@ public class MarketDataService {
 	 * Notify all listeners for a given instrument that an update to market data has occurred.
 	 * @param instrument
 	 */
-	public void notifyListeners(FinancialInstrument instrument) {
-		Log.getLogger().info("Notifying subscriptions to " + instrument);
+	protected void notifyListeners(FinancialInstrument instrument) {
+		Log.getLogger().info("MarketDataService: " + getName() + "\tNotifying subscriptions to " + instrument);
 		if (instrument == null) return;
 		
 		List<MarketDataListener> listenersCopy = null;
@@ -115,13 +140,14 @@ public class MarketDataService {
 	 * @param marketData
 	 */
 	public void publishMarketData(FinancialInstrument instrument, MarketData marketData) {
-		Log.getLogger().info("Publish: " + instrument + "\t" + marketData);
+		Log.getLogger().info("MarketDataService: " + getName() + "\tPublish: " + instrument + "\t" + marketData);
+		if (instrument == null || marketData == null) return;
 		cache.insertMarketData(instrument, marketData);
 		notifyListeners(instrument);
 	}
 	
 	public int getListenerCount(FinancialInstrument instrument) {
-		Log.getLogger().info("Getting subscription count for " + instrument);
+		Log.getLogger().info("MarketDataService: " + getName() + "\tGetting subscription count for " + instrument);
 		if (instrument == null) return 0;
 		
 		List<MarketDataListener> listenersCopy = null;
@@ -135,7 +161,9 @@ public class MarketDataService {
 		
 	}
 	
-	
-	
-
+	public MarketData getMarketData(FinancialInstrument instrument) throws MarketDataException {
+		MarketData marketData = cache.getMarketData(instrument);
+		if (marketData == null) throw new MarketDataException("MarketDataService: " + getName() + "\tNo entry in cache for " + instrument);
+		return marketData;
+	}
 }

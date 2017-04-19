@@ -38,8 +38,17 @@ public class RiskCache {
 	 * @param marketData
 	 */
 	public void insertRisk(FinancialInstrument instrument, Risk risk) {
-		Log.getLogger().info("RiskCache " + getName() + "\tInsert: " + instrument + "\t" + risk);
+		Log.getLogger().info("RiskCache " + getName() + "\tInsert: " + instrument + "\n" + risk);
 		cache.put(instrument, risk);
+	}
+	
+	/**
+	 * Remove the specified instrument and its risk from the risk cache
+	 * @param instrument
+	 */
+	public void removeRisk(FinancialInstrument instrument) {
+		Log.getLogger().info("RiskCache " + getName() + "\tRemove: " + instrument);
+		cache.remove(instrument);
 	}
 	
 	/**

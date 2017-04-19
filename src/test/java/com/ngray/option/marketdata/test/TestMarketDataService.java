@@ -48,7 +48,7 @@ public class TestMarketDataService {
 			while (count > 0) {
 				double value = new Random().nextDouble();
 				MarketData marketData = new MarketData(value, Type.PRICE);
-				publishMarketData(service, instrument, marketData);
+				publishMarketData(instrument, marketData);
 				--count;
 				try {
 					Thread.sleep(10);
@@ -59,8 +59,7 @@ public class TestMarketDataService {
 		}
 
 		@Override
-		public void publishMarketData(MarketDataService service, FinancialInstrument instrument,
-				MarketData marketData) {
+		public void publishMarketData(FinancialInstrument instrument, MarketData marketData) {
 			service.publishMarketData(instrument, marketData);			
 		}
 	}
