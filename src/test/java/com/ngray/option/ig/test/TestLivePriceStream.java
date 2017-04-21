@@ -74,7 +74,7 @@ public class TestLivePriceStream {
 				stream.addSubscription(
 						FinancialInstrument.fromIGMarket(position.getMarket()), 
 						(instr, marketData) -> { 
-								System.out.println("Instrument: " + instr.getIdentifier() + " Mid-price: " + marketData.getValue()); 
+								System.out.println("Instrument: " + instr.getIdentifier() + " Mid-price: " + marketData.getMid()); 
 								count.incrementAndGet();
 							} 
 						);

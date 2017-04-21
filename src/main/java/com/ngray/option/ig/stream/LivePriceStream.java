@@ -64,7 +64,7 @@ public class LivePriceStream {
 	 * @param publisher
 	 */
 	public void addSubscription(FinancialInstrument instrument, MarketDataPublisher publisher) {
-		Log.getLogger().info("Adding LivePriceSrtream subscription: " + instrument.getIdentifier());
+		Log.getLogger().info("Adding LivePriceStream subscription: " + instrument.getIdentifier());
 		if (instrument == null || publisher == null) {
 			Log.getLogger().error("LivePriceStream::addSubscription called with null parameter (FinancialInstrument or MarketDataPubliser) ignored");
 			return;
@@ -114,8 +114,9 @@ public class LivePriceStream {
 			public void onItemUpdate(ItemUpdate itemUpdate) {
 				String bid = itemUpdate.getValue("BID");
 				String offer = itemUpdate.getValue("OFFER");
-				double mid = 0.5 * (Double.parseDouble(bid) + Double.parseDouble(offer));
-				publisher.publishMarketData(instrument, new MarketData(mid, Type.PRICE));
+				double bidVal = Double.parseDouble(bid);
+				double offerVal = Double.parseDouble(offer);
+				publisher.publishMarketData(instrument, new MarketData(instrument.getIdentifier(), bidVal, offerVal, Type.PRICE));
 			}
 
 			@Override

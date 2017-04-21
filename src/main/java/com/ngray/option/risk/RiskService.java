@@ -39,7 +39,7 @@ public class RiskService {
 	 * @param name
 	 */
 	public RiskService(String name, MarketDataService marketDataService, LocalDate valueDate) {
-		Log.getLogger().info("RiskService: Constructing service: " + name);
+		Log.getLogger().info("Constructing RiskService: " + name);
 		this.cache = new RiskCache(name);
 		this.riskListeners = new HashMap<>();
 		this.marketDataService = marketDataService;
@@ -62,12 +62,12 @@ public class RiskService {
 	 * @return
 	 */
 	public RiskListener addRiskListener(FinancialInstrument instrument, RiskListener riskListener) {
-		Log.getLogger().info("RiskService: " + getName() + "\tAdding subscription for " + instrument);
+		Log.getLogger().info("RiskService " + getName() + ": adding subscription for " + instrument);
 		if (instrument == null || riskListener == null) return null;
 		
 		synchronized(riskListenerLock) {	
 			if (!riskListeners.containsKey(instrument)) {
-				Log.getLogger().debug("RiskService: " + getName() + "\tCreating new subscription list for instrument " + instrument);
+				Log.getLogger().debug("RiskService " + getName() + ": creating new subscription list for instrument " + instrument);
 				riskListeners.put(instrument, new ArrayList<>());
 				
 				MarketDataListener marketDataListener = 
@@ -84,7 +84,7 @@ public class RiskService {
 				
 			}
 			
-			Log.getLogger().debug("RiskService: " + getName() + "\tAdding subscription to list for " + instrument);
+			Log.getLogger().debug("RiskService " + getName() + ": adding subscription to list for " + instrument);
 			riskListeners.get(instrument).add(riskListener);
 		}
 		
@@ -97,7 +97,7 @@ public class RiskService {
 	 * @param riskListener
 	 */
 	public void removeRiskListener(FinancialInstrument instrument, RiskListener riskListener) {
-		Log.getLogger().info("RiskService: " + getName() + "\tRemoving subscription for " + instrument);
+		Log.getLogger().info("RiskService " + getName() + ": removing subscription for " + instrument);
 		if(instrument == null || riskListener == null) return;
 		
 		synchronized(riskListenerLock) {
@@ -118,7 +118,7 @@ public class RiskService {
 	 * @param instrument
 	 */
 	protected void notifyRiskListeners(FinancialInstrument instrument) {
-		Log.getLogger().info("RiskService: " + getName() + "\tNotifying subscriptions to " + instrument);
+		Log.getLogger().info("RiskService " + getName() + ": notifying subscriptions to " + instrument);
 		if (instrument == null) return;
 		
 		List<RiskListener> listenersCopy = null;
@@ -140,14 +140,14 @@ public class RiskService {
 	 * @param risk
 	 */
 	public void publishRisk(FinancialInstrument instrument, Risk risk) {
-		Log.getLogger().info("RiskService: " + getName() + "\tPublish: " + instrument + "\n" + risk);
+		Log.getLogger().info("RiskService " + getName() + ": publish: " + instrument + risk);
 		if (instrument == null || risk == null) return;
 		cache.insertRisk(instrument, risk);
 		notifyRiskListeners(instrument);
 	}
 		
 	protected Risk calculateRisk(FinancialInstrument instrument, MarketData marketData) {	
-		Log.getLogger().info("RiskService: " + getName() + "\tcalculating risk for " + instrument + " using " + marketData);
+		Log.getLogger().info("RiskService " + getName() + ": calculating risk for using " + marketData);
 		try {
 			Map<FinancialInstrument, MarketData> map = new HashMap<>();
 			map.put(instrument, marketData);
@@ -161,7 +161,7 @@ public class RiskService {
 			MarketDataCollection marketDataCollection = new MarketDataCollection(map);
 			return instrument.getModel().calculateRisk(instrument, marketDataCollection, valueDate);
 		} catch (ModelException | MarketDataException e) {
-			Log.getLogger().error("RiskService: " + getName() + "\t" + e.getMessage(), e);
+			Log.getLogger().error("RiskService " + getName() + ": " + e.getMessage(), e);
 			return new Risk();
 		}
 	}

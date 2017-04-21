@@ -47,7 +47,7 @@ public class TestMarketDataService {
 			int count = 1000;
 			while (count > 0) {
 				double value = new Random().nextDouble();
-				MarketData marketData = new MarketData(value, Type.PRICE);
+				MarketData marketData = new MarketData(instrument.getIdentifier(), value, Type.PRICE);
 				publishMarketData(instrument, marketData);
 				--count;
 				try {

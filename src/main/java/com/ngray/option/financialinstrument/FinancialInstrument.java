@@ -47,6 +47,7 @@ public abstract class FinancialInstrument {
 		case "OPT_CURRENCIES":
 		case "OPT_INDICES":
 		case "OPT_RATES":
+		case "UNKNOWN": // Options come back as unknown sometimes
 			return new EuropeanOption(market);
 		default:
 			return new Security(market);

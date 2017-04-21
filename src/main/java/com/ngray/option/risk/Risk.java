@@ -77,7 +77,8 @@ public class Risk {
 	
 	@Override
 	public String toString() {
-		String s = "--Risk-------------------------"  +
+		String s = "\n\nRisk"  +
+	               "\n====================================" +
 				   "\nValue:\t" + getValue() +
 				   "\nIV:\t" + getImpliedVolatility() +
 				   "\nDelta:\t" + getDelta() +
@@ -85,7 +86,7 @@ public class Risk {
 				   "\nVega:\t" + getVega() +
 				   "\nTheta:\t" + getTheta() +
 				   "\nRho:\t" + getRho() + 
-				   "\n-------------------------------";
+				   "\n====================================\n\n";
 		return s;
 				   
 	}

@@ -30,7 +30,7 @@ public class DummyMarketDataSource implements MarketDataPublisher, Runnable {
 		int count = 10;
 		while (!stop && count > 0) {
 			double value = new Random().nextDouble();
-			MarketData marketData = new MarketData(value, Type.PRICE);
+			MarketData marketData = new MarketData(instrument.getIdentifier(), value, Type.PRICE);
 			publishMarketData(instrument, marketData);
 			--count;
 			try {

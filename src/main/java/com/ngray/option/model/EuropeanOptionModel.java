@@ -60,15 +60,15 @@ public class EuropeanOptionModel implements Model {
 			if (spotMarketData.getType() != Type.PRICE) {
 				throw new ModelException("");
 			}
-			double spot = spotMarketData.getValue();
+			double spot = spotMarketData.getMid();
 			
 			double volatility = 0.0;
 			double optionPrice = 0.0;
 			if (optionPriceOrVol.getType() == Type.VOLATILITY) {
-				volatility = optionPriceOrVol.getValue();
+				volatility = optionPriceOrVol.getMid();
 				optionPrice = BlackScholesModel.calcPutOptionPrice(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
 			} else {
-				optionPrice = optionPriceOrVol.getValue();
+				optionPrice = optionPriceOrVol.getMid();
 				 volatility = BlackScholesModel.calcPutOptionImpliedVol(spot, strike, optionPrice, timeToExpiry, riskFreeRate, dividendYield);
 			}
 			
@@ -99,15 +99,15 @@ public class EuropeanOptionModel implements Model {
 			if (spotMarketData.getType() != Type.PRICE) {
 				throw new ModelException("");
 			}
-			double spot = spotMarketData.getValue();
+			double spot = spotMarketData.getMid();
 			
 			double volatility = 0.0;
 			double optionPrice = 0.0;
 			if (optionPriceOrVol.getType() == Type.VOLATILITY) {
-				volatility = optionPriceOrVol.getValue();
+				volatility = optionPriceOrVol.getMid();
 				optionPrice = BlackScholesModel.calcCallOptionPrice(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
 			} else {
-				optionPrice = optionPriceOrVol.getValue();
+				optionPrice = optionPriceOrVol.getMid();
 				 volatility = BlackScholesModel.calcCallOptionImpliedVol(spot, strike, optionPrice, timeToExpiry, riskFreeRate, dividendYield);
 			}
 			

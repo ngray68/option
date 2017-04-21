@@ -34,8 +34,8 @@ public class TestEuropeanOptionModel {
 		when(option.getModel()).thenReturn(new EuropeanOptionModel());
 		
 		MarketDataCollection marketData = mock(MarketDataCollection.class);
-		when(marketData.getMarketData(underlying)).thenReturn(new MarketData(7275.0, MarketData.Type.PRICE));
-		when(marketData.getMarketData(option)).thenReturn(new MarketData(78.5080, MarketData.Type.PRICE));
+		when(marketData.getMarketData(underlying)).thenReturn(new MarketData(underlying.getIdentifier(), 7275.0, MarketData.Type.PRICE));
+		when(marketData.getMarketData(option)).thenReturn(new MarketData(option.getIdentifier(), 78.5080, MarketData.Type.PRICE));
 		
 		LocalDate valueDate = LocalDate.of(2017, 05, 16);
 		Risk risk = option.getModel().calculateRisk(option, marketData, valueDate);
@@ -64,8 +64,8 @@ public class TestEuropeanOptionModel {
 		when(option.getModel()).thenReturn(new EuropeanOptionModel());
 		
 		MarketDataCollection marketData = mock(MarketDataCollection.class);
-		when(marketData.getMarketData(underlying)).thenReturn(new MarketData(7275.0, MarketData.Type.PRICE));
-		when(marketData.getMarketData(option)).thenReturn(new MarketData(78.5080, MarketData.Type.PRICE));
+		when(marketData.getMarketData(underlying)).thenReturn(new MarketData(underlying.getIdentifier(), 7275.0, MarketData.Type.PRICE));
+		when(marketData.getMarketData(option)).thenReturn(new MarketData(option.getIdentifier(), 78.5080, MarketData.Type.PRICE));
 		
 		
 		LocalDate valueDate = LocalDate.of(2017, 05, 16);

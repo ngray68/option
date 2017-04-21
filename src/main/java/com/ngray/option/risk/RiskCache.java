@@ -19,7 +19,7 @@ public class RiskCache {
 	private final Map<FinancialInstrument, Risk> cache;
 	
 	public RiskCache(String name) {
-		Log.getLogger().info("Constructing RiskCache: " + name);
+		Log.getLogger().info("Constructing RiskCache " + name);
 		this.name = name;
 		this.cache = new ConcurrentHashMap<>();
 	}
@@ -38,7 +38,7 @@ public class RiskCache {
 	 * @param marketData
 	 */
 	public void insertRisk(FinancialInstrument instrument, Risk risk) {
-		Log.getLogger().info("RiskCache " + getName() + "\tInsert: " + instrument + "\n" + risk);
+		Log.getLogger().info("RiskCache " + getName() + ": insert " + instrument + risk);
 		cache.put(instrument, risk);
 	}
 	
@@ -47,7 +47,7 @@ public class RiskCache {
 	 * @param instrument
 	 */
 	public void removeRisk(FinancialInstrument instrument) {
-		Log.getLogger().info("RiskCache " + getName() + "\tRemove: " + instrument);
+		Log.getLogger().info("RiskCache " + getName() + ": remove: " + instrument);
 		cache.remove(instrument);
 	}
 	
@@ -58,7 +58,7 @@ public class RiskCache {
 	 * @return
 	 */
 	public Risk getRisk(FinancialInstrument instrument) {
-		Log.getLogger().info("RiskCache " + getName() + "\tget: " + instrument);
+		Log.getLogger().info("RiskCache " + getName() + ": get " + instrument);
 		return cache.get(instrument);
 	}
 }

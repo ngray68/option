@@ -48,8 +48,8 @@ public class SimpleOptionPricer {
 			Security underlying = new Security("Underlying");
 			EuropeanOption option = new EuropeanOption("Option", underlying, config.strike, config.expiryDate, config.putOrCall);
 			Map<FinancialInstrument, MarketData> prices = new HashMap<>();
-			prices.put(underlying, new MarketData(config.underlyingPrice, MarketData.Type.PRICE));
-			prices.put(option, new MarketData(config.optionPriceOrVolatility,  config.isVolatility ? MarketData.Type.VOLATILITY : MarketData.Type.PRICE));
+			prices.put(underlying, new MarketData(underlying.getIdentifier(), config.underlyingPrice, MarketData.Type.PRICE));
+			prices.put(option, new MarketData(option.getIdentifier(), config.optionPriceOrVolatility,  config.isVolatility ? MarketData.Type.VOLATILITY : MarketData.Type.PRICE));
 			MarketDataCollection marketData = new MarketDataCollection(prices);
 			Risk risk = option.getModel().calculateRisk(option, marketData, config.valueDate);
 			System.out.println(risk);

@@ -45,7 +45,7 @@ public class MarketDataCache {
 	 * @param marketData
 	 */
 	public void insertMarketData(FinancialInstrument instrument, MarketData marketData) {
-		Log.getLogger().info("MarketDataCache insert: " + instrument + "\t" + marketData);
+		Log.getLogger().info("MarketDataCache " + getName() + ": insert: " + marketData);
 		cache.put(instrument, marketData);
 	}
 	
@@ -56,7 +56,7 @@ public class MarketDataCache {
 	 * @return
 	 */
 	public MarketData getMarketData(FinancialInstrument instrument) {
-		Log.getLogger().info("MarketDataCache get: " + instrument);
+		Log.getLogger().info("MarketDataCache " +getName() + ": get " + instrument);
 		return cache.get(instrument);
 	}
 }

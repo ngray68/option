@@ -4,6 +4,9 @@ import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.position.IGPosition;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
+import com.ngray.option.marketdata.MarketData;
+import com.ngray.option.marketdata.MarketDataListener;
+import com.ngray.option.marketdata.MarketDataService;
 import com.ngray.option.risk.Risk;
 import com.ngray.option.risk.RiskListener;
 import com.ngray.option.risk.RiskService;
@@ -23,11 +26,15 @@ public class Position {
 	
 	private final double open;
 	
+	private double latest;
+	
 	private double positionPnL;
 	
 	private Risk positionRisk;
 	
 	private RiskListener riskListener = null;
+	
+	private MarketDataListener marketDataListener = null;
 	
 	private final IGPosition igPosition;
 	
@@ -40,6 +47,7 @@ public class Position {
 		this.id = igPosition.getPositionDetail().getDealId();
 		this.positionSize = igPosition.getPositionDetail().getDealSize();
 		this.open = igPosition.getPositionDetail().getOpenLevel();
+		this.latest = Double.NaN;
 		this.instrument = FinancialInstrument.fromIGMarket(igPosition.getMarket());
 	}
 	
@@ -55,6 +63,7 @@ public class Position {
 		this.instrument = instrument;
 		this.positionSize = positionSize;
 		this.open = open;
+		this.latest = Double.NaN;
 		
 		// initialize PnL and risk to NaN
 		this.positionPnL = Double.NaN;
@@ -65,14 +74,53 @@ public class Position {
 	 * Update the position risk given the risk on a single contract supplied
 	 * @param riskOnPositionOfSizeOne
 	 */
-	public void updatePositionRiskAndPnL(Risk riskOnPositionOfSizeOne) {
-		Log.getLogger().info("Position: " + getId() + " updating risk");
-		Log.getLogger().debug("Previous risk:\n" + positionRisk);
-		Log.getLogger().debug("Previous PnL: " + positionPnL);
+	public void updatePositionRisk(Risk riskOnPositionOfSizeOne) {
+		Log.getLogger().info("Position: " + getId() + " updating risk...");
 		positionRisk = riskOnPositionOfSizeOne.multiply(getPositionSize());
-		positionPnL = positionRisk.getValue() - getOpen() * getPositionSize();
-		Log.getLogger().debug("New risk:\n" + positionRisk);
-		Log.getLogger().debug("New PnL:" + positionPnL);
+		Log.getLogger().debug(positionRisk);
+	}
+	
+	/**
+	 * Update the position PnL from the market data supplied
+	 * @param marketData
+	 */
+	public void updatePositionPnL(MarketData marketData) {
+		Log.getLogger().info("Position: " + getId() + " updating PnL...");
+		
+		latest = marketData.getMid();
+		if (Double.compare(positionSize, 0.0) >= 0) {
+			if (!Double.isNaN(marketData.getBid())) {
+				Log.getLogger().debug("Long position - Using bid price " + marketData.getBid());
+				latest = marketData.getBid();
+			}
+		} else {
+			if (!Double.isNaN(marketData.getOffer())) {
+				Log.getLogger().debug("Long position - Using offer price " + marketData.getOffer());
+				latest = marketData.getOffer();
+			}
+		}
+		
+		positionPnL = (latest - getOpen()) * getPositionSize();
+		Log.getLogger().debug(getPositionDetails());
+	}
+	
+	@Override
+	public String toString() {
+		String result = getPositionDetails();
+		result+=getPositionRisk();
+		return result;
+	}
+	
+	public String getPositionDetails() {
+		String result = "\n\nPosition: " + getId();
+		result+="\n===================================";
+		result+="\nSecurity:\t" + getInstrument();
+		result+="\nPosition:\t" + getPositionSize();
+		result+="\nOpen:\t\t" + getOpen();
+		result+="\nLatest:\t\t" + getLatest();
+		result+="\nPnL:\t\t" + getPositionPnL();
+		result+="\n===================================\n\n";
+		return result;
 	}
 	
 	/**
@@ -114,6 +162,14 @@ public class Position {
 	public double getOpen() {
 		return open;
 	}
+	
+	/**
+	 * Return the latest price for the instrument underlying the position
+	 * @return
+	 */
+	public double getLatest() {
+		return latest;
+	}
 
 	/**
 	 * Get the risk for this position
@@ -140,10 +196,9 @@ public class Position {
 						return;
 					}
 					
-					updatePositionRiskAndPnL(risk);
+					updatePositionRisk(risk);
 				}	
 			});
-		
 	}
 
 	/**
@@ -154,4 +209,31 @@ public class Position {
 		Log.getLogger().info("Position: " + getId() + " unsubcribing from RiskService " + riskService.getName());
 		riskService.removeRiskListener(getInstrument(), riskListener);
 	}
- }
+	
+	/**
+	 * Subscribe to the market data service to calculate PnL
+	 * @param marketDataService
+	 */
+	public void subscribeToMarketDataService(MarketDataService marketDataService) {
+		Log.getLogger().info("Position: " + getId() + " subcribing to MarketDataService " + marketDataService.getName());
+		marketDataListener = 
+				marketDataService.addListener(getInstrument(), new MarketDataListener() {
+
+				@Override
+				public void onMarketDataUpdate(FinancialInstrument instrument, MarketData marketData) {
+					if (!instrument.equals(getInstrument())) {
+						Log.getLogger().warn("MarketDataListener::onMarketDataUpdate called with instrument: " + 
+					                          instrument + ", expected: " + getInstrument() + ", update ignored");
+						return;
+					}
+					
+					updatePositionPnL(marketData);
+				}	
+			});
+	}
+	
+	public void unsubscribeFromMarketDataService(MarketDataService marketDataService) {
+		Log.getLogger().info("Position: " + getId() + " unsubcribing from MarketDataService " + marketDataService.getName());
+		marketDataService.removeListener(getInstrument(), marketDataListener);
+	}
+}
