@@ -14,7 +14,7 @@ import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataService;
-import com.ngray.option.marketdata.MarketDataSource;
+import com.ngray.option.marketdata.MarketDataPublisher;
 import com.ngray.option.marketdata.MarketData.Type;
 import com.ngray.option.marketdata.MarketDataListener;
 
@@ -22,7 +22,7 @@ public class TestMarketDataService {
 	
 	private MarketDataService service = new MarketDataService("TestMarketDataService");
 	
-	public class TestMarketDataSource implements Runnable, MarketDataSource {
+	public class TestMarketDataSource implements Runnable, MarketDataPublisher {
 		
 		private final String name;
 		private MarketDataService service = null;

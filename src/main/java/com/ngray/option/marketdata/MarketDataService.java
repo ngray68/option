@@ -35,7 +35,7 @@ public class MarketDataService {
 	/**
 	 * Market data sources
 	 */
-	private final Map<FinancialInstrument, MarketDataSource> sources;
+	private final Map<FinancialInstrument, MarketDataPublisher> sources;
 	
 	/**
 	 * Thread pool for market data source

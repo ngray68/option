@@ -6,6 +6,8 @@ import com.ngray.option.model.Model;
 
 public abstract class FinancialInstrument {
 
+	private Market igMarket;
+	
 	/**
 	 * The unique id for the financial instrument
 	 */
@@ -17,6 +19,12 @@ public abstract class FinancialInstrument {
 	 */
 	public FinancialInstrument(String identifier) {
 		this.identifier = identifier;
+		this.igMarket = null;
+	}
+	
+	public FinancialInstrument(String identifier, Market igMarket) {
+		this.identifier = identifier;
+		this.igMarket = igMarket;
 	}
 	
 	/**
@@ -43,6 +51,10 @@ public abstract class FinancialInstrument {
 		default:
 			return new Security(market);
 		}
+	}
+
+	public Market getIGMarket() {
+		return igMarket;
 	}
 	
 }

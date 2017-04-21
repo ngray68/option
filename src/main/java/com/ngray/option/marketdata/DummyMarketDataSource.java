@@ -5,7 +5,7 @@ import java.util.Random;
 import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.marketdata.MarketData.Type;
 
-public class DummyMarketDataSource implements MarketDataSource, Runnable {
+public class DummyMarketDataSource implements MarketDataPublisher, Runnable {
 
 	private final String name;
 	private final MarketDataService service;

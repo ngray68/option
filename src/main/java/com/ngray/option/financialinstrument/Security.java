@@ -6,16 +6,13 @@ import com.ngray.option.model.Model;
 
 public class Security extends FinancialInstrument {
 
-	
-	private Market igMarket;
 
 	public Security(String identifier) {
 		super(identifier);
 	}
 	
 	public Security(Market market) {
-		super(market.getInstrumentName());
-		this.igMarket = market;
+		super(market.getInstrumentName(), market);
 	}
 
 	// Overrides from Object

@@ -3,8 +3,9 @@ package com.ngray.option.ig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
+
 import com.ngray.option.Log;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.position.IGPositionList;
@@ -23,18 +24,20 @@ import com.ngray.option.ig.rest.RestAPIResponse;
 public final class Session {
 		
 	private final List<Header> sessionHeaders;
+	private final SessionInfo sessionInfo;
 	private final boolean isLive;
 	
 	/**
 	 * Create a new Session with the supplied Session headers
 	 * The session headers will include keys identifying the session
-	 * which must be supplied with every subsequent REST action after login
+	 * which must be supplied with every subsequent REST action after login,
+	 * and must also include the basic headers required to exceute a loging eg api key
 	 * @param sessionHeaders
 	 * @param isLive
 	 */
-	private Session(List<Header> sessionHeaders, boolean isLive) {
-		this.sessionHeaders  = new ArrayList<>(SessionConstants.getHeaderList(isLive));
-		this.sessionHeaders.addAll(sessionHeaders);
+	private Session(List<Header> sessionHeaders, SessionInfo sessionInfo, boolean isLive) {
+		this.sessionHeaders  = new ArrayList<>(sessionHeaders);
+		this.sessionInfo = sessionInfo;
 		this.isLive = isLive;
 	}
 	
@@ -42,9 +45,11 @@ public final class Session {
 	 * Create a new bare session - this is only used to login
 	 * @param isLive
 	 */
-	private Session(boolean isLive) {
+	private Session(String apiKey, boolean isLive) {
 		this.isLive = isLive;
-		this.sessionHeaders  = new ArrayList<>(SessionConstants.getHeaderList(isLive));
+		this.sessionHeaders  = new ArrayList<>(SessionConstants.getHeaderList());
+		this.sessionHeaders.add(new BasicHeader("X-IG-API-KEY", apiKey));
+		this.sessionInfo = null;
 	}
 	
 	/**
@@ -57,15 +62,17 @@ public final class Session {
 	 * @return a Session
 	 * @throws SessionException
 	 */
-	public static Session login(String username, String password, boolean encrypted, boolean isLive) throws SessionException {
+	public static Session login(SessionLoginDetails loginDetails, boolean isLive) throws SessionException {
 		
-		Log.getLogger().info("Logging in as " + username + " to" + (isLive ? " live account" : " demo account"));
-		SessionLoginDetails loginDetails = new SessionLoginDetails(username, password, encrypted);
+		Log.getLogger().info("Logging in to" + (isLive ? " live account" : " demo account"));
+		
 		RestAPIPost post = new RestAPIPost("/session", loginDetails.asJson());
-		Session session = new Session(isLive);
+		Session session = new Session(loginDetails.getApiKey(), isLive);
 		RestAPIResponse response = post.execute(session);
-		List<Header> headers = response.getHeaders();
-		return new Session(headers, isLive);
+		List<Header> headers = new ArrayList<>(session.getSessionHeaders());
+		headers.addAll(response.getHeaders());
+		SessionInfo sessionInfo = SessionInfo.fromJson(response.getResponseBodyAsJson());	
+		return new Session(headers, sessionInfo, isLive);
 	}
 	
 	/**
@@ -85,6 +92,44 @@ public final class Session {
 	 */
 	public List<Header> getSessionHeaders() {
 		return Collections.unmodifiableList(sessionHeaders);
+	}
+	
+	/**
+	 * Return the CST. Empty string if not present
+	 * @param name
+	 * @return
+	 */
+	public String getClientSecurityToken() {
+		String result = null;
+		for (Header header : sessionHeaders) {
+			if (header.getName().equals(SessionConstants.CST)) {
+				result = header.getValue();
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Return the CST. Empty string if not present
+	 * @param name
+	 * @return
+	 */
+	public String getXSecurityToken() {
+		String result = null;
+		for (Header header : sessionHeaders) {
+			if (header.getName().equals(SessionConstants.X_SECURITY_TOKEN)) {
+				result = header.getValue();
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Return the session info object for this session
+	 * @return
+	 */
+	public SessionInfo getSessionInfo() {
+		return sessionInfo;
 	}
 	
 	/**
