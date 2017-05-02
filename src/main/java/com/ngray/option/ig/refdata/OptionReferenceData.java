@@ -17,9 +17,9 @@ public class OptionReferenceData {
 	private final LocalDate expiryDate;
 	private final EuropeanOption.Type callOrPut;
 	
-	public OptionReferenceData(String optionName, String underlyingName, double strike, LocalDate expiryDate, EuropeanOption.Type callOrPut) {
-	  this.optionName = optionName;
-	  this.underlying= new Security(underlyingName);
+	public OptionReferenceData(String optionName, Security underlying, double strike, LocalDate expiryDate, EuropeanOption.Type callOrPut) {
+	  this.optionName = optionName;  
+	  this.underlying = underlying;
 	  this.strike = strike;
 	  this.expiryDate = expiryDate;
 	  this.callOrPut = callOrPut;  

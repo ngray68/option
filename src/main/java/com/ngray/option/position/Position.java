@@ -5,11 +5,7 @@ import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.position.IGPosition;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.marketdata.MarketData;
-import com.ngray.option.marketdata.MarketDataListener;
-import com.ngray.option.marketdata.MarketDataService;
 import com.ngray.option.risk.Risk;
-import com.ngray.option.risk.RiskListener;
-import com.ngray.option.risk.RiskService;
 
 /**
  * Models a trading position in a financial instrument
@@ -32,10 +28,6 @@ public class Position {
 	
 	private Risk positionRisk;
 	
-	private RiskListener riskListener = null;
-	
-	private MarketDataListener marketDataListener = null;
-	
 	private final IGPosition igPosition;
 	
 	/**
@@ -49,6 +41,10 @@ public class Position {
 		this.open = igPosition.getPositionDetail().getOpenLevel();
 		this.latest = Double.NaN;
 		this.instrument = FinancialInstrument.fromIGMarket(igPosition.getMarket());
+		
+		// initialize PnL and risk to NaN
+		this.positionPnL = Double.NaN;
+		this.positionRisk = new Risk();
 	}
 	
 	/**
@@ -178,62 +174,8 @@ public class Position {
 	public Risk getPositionRisk() {
 		return positionRisk;
 	}
-	
-	/**
-	 * Subscribe to the supplied risk service to receive risk updates for this position
-	 * @param riskService
-	 */
-	public void subscribeToRiskService(RiskService riskService) {
-		Log.getLogger().info("Position: " + getId() + " subcribing to RiskService " + riskService.getName());
-		riskListener = 
-			riskService.addRiskListener(getInstrument(), new RiskListener() {
 
-				@Override
-				public void onRiskUpdate(FinancialInstrument instrument, Risk risk) {
-					if (!instrument.equals(getInstrument())) {
-						Log.getLogger().warn("RiskListener::onRiskUpdate called with instrument: " + 
-					                          instrument + ", expected: " + getInstrument() + ", update ignored");
-						return;
-					}
-					
-					updatePositionRisk(risk);
-				}	
-			});
-	}
-
-	/**
-	 * Unsubscribe from the supplied risk service - the position will no longer receive risk updates
-	 * @param riskService
-	 */
-	public void unsubscribeFromRiskService(RiskService riskService) {
-		Log.getLogger().info("Position: " + getId() + " unsubcribing from RiskService " + riskService.getName());
-		riskService.removeRiskListener(getInstrument(), riskListener);
-	}
-	
-	/**
-	 * Subscribe to the market data service to calculate PnL
-	 * @param marketDataService
-	 */
-	public void subscribeToMarketDataService(MarketDataService marketDataService) {
-		Log.getLogger().info("Position: " + getId() + " subcribing to MarketDataService " + marketDataService.getName());
-		marketDataListener = 
-				marketDataService.addListener(getInstrument(), new MarketDataListener() {
-
-				@Override
-				public void onMarketDataUpdate(FinancialInstrument instrument, MarketData marketData) {
-					if (!instrument.equals(getInstrument())) {
-						Log.getLogger().warn("MarketDataListener::onMarketDataUpdate called with instrument: " + 
-					                          instrument + ", expected: " + getInstrument() + ", update ignored");
-						return;
-					}
-					
-					updatePositionPnL(marketData);
-				}	
-			});
-	}
-	
-	public void unsubscribeFromMarketDataService(MarketDataService marketDataService) {
-		Log.getLogger().info("Position: " + getId() + " unsubcribing from MarketDataService " + marketDataService.getName());
-		marketDataService.removeListener(getInstrument(), marketDataListener);
+	public IGPosition getIgPosition() {
+		return igPosition;
 	}
 }

@@ -1,13 +1,17 @@
 package com.ngray.option.ig.market;
 
 import com.google.gson.Gson;
+import com.ngray.option.ig.Session;
+import com.ngray.option.ig.SessionException;
+import com.ngray.option.ig.rest.RestAPIGet;
+import com.ngray.option.ig.rest.RestAPIResponse;
 
 /**
  * The class Market encapsulates the properties of a market
  * eg. the FTSE 100 index.
  * Properties include the name, expiry, type etc of the instrument
  * last bid, offer and so on.
- * The only methods provided are getters/setters for each attribute
+ * The only methods provided are getters for each attribute
  * and utility methods returning arrays of attribute names and values
  * for use in, for example, a TableModel, as well as fromJson and asJson
  * methods
@@ -38,8 +42,7 @@ public final class Market {
 		"Scaling Factor",
 		"Streaming Prices Available"
 	};
-	
-	
+
 	private double bid;		// The market's latest bid and offer prices
 	private double offer;
 	
@@ -95,149 +98,77 @@ public final class Market {
 		return gson.toJson(this);
 	}
 
-	// Getter and Setter methods for all attributes
+	// Getter methods for all attributes
 	public double getBid() {
 		return bid;
-	}
-
-	public void setBid(double bid) {
-		this.bid = bid;
 	}
 
 	public double getOffer() {
 		return offer;
 	}
-
-	public void setOffer(double offer) {
-		this.offer = offer;
-	}
-
+	
 	public int getDelayTime() {
 		return delayTime;
-	}
-
-	public void setDelayTime(int delayTime) {
-		this.delayTime = delayTime;
 	}
 
 	public String getEpic() {
 		return epic;
 	}
 
-	public void setEpic(String epic) {
-		this.epic = epic;
-	}
-
 	public String getExpiry() {
 		return expiry;
-	}
-
-	public void setExpiry(String expiry) {
-		this.expiry = expiry;
 	}
 
 	public double getHigh() {
 		return high;
 	}
 
-	public void setHigh(double high) {
-		this.high = high;
-	}
-
 	public double getLow() {
 		return low;
-	}
-
-	public void setLow(double low) {
-		this.low = low;
 	}
 
 	public String getInstrumentName() {
 		return instrumentName;
 	}
 
-	public void setInstrumentName(String instrumentName) {
-		this.instrumentName = instrumentName;
-	}
-
 	public String getInstrumentType() {
 		return instrumentType;
-	}
-
-	public void setInstrumentType(String instrumentType) {
-		this.instrumentType = instrumentType;
 	}
 
 	public int getLotSize() {
 		return lotSize;
 	}
 
-	public void setLotSize(int lotSize) {
-		this.lotSize = lotSize;
-	}
-
 	public String getMarketStatus() {
 		return marketStatus;
-	}
-
-	public void setMarketStatus(String marketStatus) {
-		this.marketStatus = marketStatus;
 	}
 
 	public double getNetChange() {
 		return netChange;
 	}
 
-	public void setNetChange(double netChange) {
-		this.netChange = netChange;
-	}
-
 	public String getUpdateTimeUTC() {
 		return updateTimeUTC;
-	}
-
-	public void setUpdateTimeUTC(String updateTimeUTC) {
-		this.updateTimeUTC = updateTimeUTC;
 	}
 
 	public String getUpdateTime() {
 		return updateTime;
 	}
 
-	public void setUpdateTime(String updateTime) {
-		this.updateTime = updateTime;
-	}
-
 	public boolean isStreamingPricesAvailable() {
 		return streamingPricesAvailable;
-	}
-
-	public void setStreamingPricesAvailable(boolean streamingPricesAvailable) {
-		this.streamingPricesAvailable = streamingPricesAvailable;
 	}
 
 	public double getScalingFactor() {
 		return scalingFactor;
 	}
 
-	public void setScalingFactor(double scalingFactor) {
-		this.scalingFactor = scalingFactor;
-	}
-
 	public double getPercentageChange() {
 		return percentageChange;
 	}
 
-	public void setPercentageChange(double percentageChange) {
-		this.percentageChange = percentageChange;
-	}
-
 	public boolean isOtcTradeable() {
 		return otcTradeable;
-	}
-
-	public void setOtcTradeable(boolean otcTradeable) {
-		this.otcTradeable = otcTradeable;
 	}
 
 	/**

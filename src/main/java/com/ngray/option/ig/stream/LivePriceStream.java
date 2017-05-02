@@ -82,31 +82,31 @@ public class LivePriceStream {
 
 			@Override
 			public void onClearSnapshot(String itemName, int itemPos) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
 			@Override
 			public void onCommandSecondLevelItemLostUpdates(int lostUpdates, String key) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
 			@Override
 			public void onCommandSecondLevelSubscriptionError(int code, String message, String key) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
 			@Override
 			public void onEndOfSnapshot(String itemName, int itemPos) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
 			@Override
 			public void onItemLostUpdates(String itemName, int itemPos, int lostUpdates) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
@@ -121,20 +121,19 @@ public class LivePriceStream {
 
 			@Override
 			public void onListenEnd(Subscription subscription) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
 			@Override
 			public void onListenStart(Subscription subscription) {
-				// TODO Auto-generated method stub
+				// not implemented
 				
 			}
 
 			@Override
 			public void onSubscription() {
-				// TODO Auto-generated method stub
-				
+				// not implemented
 			}
 
 			@Override
