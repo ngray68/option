@@ -41,15 +41,44 @@ public class OptionReferenceDataMap {
 	public static void init(Session session) throws SessionException {
 		
 		// Gold underlying
-		RestAPIGet get = new RestAPIGet("/marketnavigation/104139");
-		RestAPIResponse response = get.execute(session);
-		String json = response.getResponseBodyAsJson();
-		MarketNode node = MarketNode.fromJson(json);
-		Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
-		Security underlying = new Security(markets.get("Gold"));
-		// Gold futures options
-		referenceData.put("Gold Futures 1285 PUT", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
-		referenceData.put("Gold Futures 1290 CALL", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
+		if (!session.getIsLive()) {
+			RestAPIGet get = new RestAPIGet("/marketnavigation/104139");
+			RestAPIResponse response = get.execute(session);
+			String json = response.getResponseBodyAsJson();
+			MarketNode node = MarketNode.fromJson(json);
+			Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
+			Security underlying = new Security(markets.get("Gold"));
+			// Gold futures options
+			referenceData.put("Gold Futures 1285 PUT", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
+			referenceData.put("Gold Futures 1290 CALL", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
+		
+			RestAPIGet get1 = new RestAPIGet("/marketnavigation/196378");
+			RestAPIResponse response1 = get1.execute(session);
+			String json1 = response1.getResponseBodyAsJson();
+			MarketNode node1 = MarketNode.fromJson(json1);
+			Map<String, Market> markets1 = node1.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
+			Security underlyingEURUSD = new Security(markets1.get("EUR/USD"));
+			referenceData.put("Weekly EURUSD 10850 PUT", new OptionReferenceData("Weekly EURUSD 10850 PUT", underlyingEURUSD, 10850.0, LocalDate.of(2017, 5, 12), Type.PUT));
+		} else {
+			RestAPIGet get = new RestAPIGet("/marketnavigation/93613");
+			RestAPIResponse response = get.execute(session);
+			String json = response.getResponseBodyAsJson();
+			MarketNode node = MarketNode.fromJson(json);
+			Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
+			Security underlying = new Security(markets.get("Gold"));
+			// Gold futures options
+			referenceData.put("Gold Futures 1285 PUT", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
+			referenceData.put("Gold Futures 1290 CALL", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
+		
+			RestAPIGet get1 = new RestAPIGet("/marketnavigation/166904");
+			RestAPIResponse response1 = get1.execute(session);
+			String json1 = response1.getResponseBodyAsJson();
+			MarketNode node1 = MarketNode.fromJson(json1);
+			Map<String, Market> markets1 = node1.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
+			Security underlyingEURUSD = new Security(markets1.get("EUR/USD"));
+			referenceData.put("Weekly EURUSD 10850 PUT", new OptionReferenceData("Weekly EURUSD 10850 PUT", underlyingEURUSD, 10850.0, LocalDate.of(2017, 5, 12), Type.PUT));
+		}
+
 	}
 
 }

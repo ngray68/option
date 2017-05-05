@@ -6,8 +6,9 @@ public class SessionLoginDetails {
 
 	private String username;
 	private String password;
-	private boolean encrypted;
+	
 	private String apiKey;
+	private boolean encrypted;
 	/*
 	public SessionLoginDetails(String username, String password, boolean isEncrypted, String apiKey) {
 		this.username = username;
@@ -17,10 +18,6 @@ public class SessionLoginDetails {
 	}*/
 	
 	public SessionLoginDetails() {
-		this.username = "ngray68demo";
-		this.password = "Stargate50";
-		this.encrypted = false;
-		this.apiKey = "4b17a7696dd2b7bb0ea793c3bd734c8f78b5b186";
 	}
 	
 	/**
@@ -40,7 +37,8 @@ public class SessionLoginDetails {
 	}
 	
 	public static SessionLoginDetails fromJson(String json) {
-		return new Gson().fromJson(json, SessionLoginDetails.class);
+		Gson gson = new Gson();
+		return gson.fromJson(json, SessionLoginDetails.class);
 	}
 	
 	
