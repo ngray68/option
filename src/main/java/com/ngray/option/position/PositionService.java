@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ngray.option.Log;
+import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
@@ -97,6 +98,23 @@ public class PositionService {
 					notifyPnLUpdateListeners(position);
 				}	
 			});
+		
+		if (position.getInstrument() instanceof EuropeanOption) {
+			// we add a listener for the underlying price too so its available for risk calculations
+			// this listener's sole purpose is to force the market data service to subscribe to the underlying price
+			FinancialInstrument underlying = ((EuropeanOption)position.getInstrument()).getUnderlying();
+			marketDataService.addListener(underlying, new MarketDataListener() {
+
+				@Override
+				public void onMarketDataUpdate(FinancialInstrument instrument, MarketData marketData) {
+					if (!instrument.equals(underlying)) {
+						Log.getLogger().warn("MarketDataListener::onMarketDataUpdate called with instrument: " + 
+					                          instrument + ", expected: " + underlying + ", update ignored");
+						return;
+					}
+				}	
+			});
+		}
 	}
 	
 	public void subscribeAllToRiskService(RiskService riskService) {

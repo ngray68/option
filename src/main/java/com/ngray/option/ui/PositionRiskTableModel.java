@@ -157,11 +157,14 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			data[data.length - 1][THETA_COL] = newRisk[3];
 			data[data.length - 1][RHO_COL] = newRisk[4];
 			
-			fireTableCellUpdated(rowIndex, 6);
-			fireTableCellUpdated(rowIndex, 7);
-			fireTableCellUpdated(rowIndex, 8);
-			fireTableCellUpdated(rowIndex, 10);
-			fireTableCellUpdated(rowIndex, 11);
+			//fireTableCellUpdated(rowIndex, 6);
+			//fireTableCellUpdated(rowIndex, 7);
+			//fireTableCellUpdated(rowIndex, 8);
+			//fireTableCellUpdated(rowIndex, 10);
+			//fireTableCellUpdated(rowIndex, 11);
+			fireTableRowsUpdated(rowIndex, rowIndex);
+			fireTableRowsUpdated(data.length -1, data.length -1);
+			
 		}
 	}
 

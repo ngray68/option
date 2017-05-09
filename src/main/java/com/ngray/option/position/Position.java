@@ -1,10 +1,19 @@
 package com.ngray.option.position;
 
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.ngray.option.Log;
+import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.FinancialInstrument;
+import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.position.IGPosition;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.marketdata.MarketData;
+import com.ngray.option.marketdata.MarketData.Type;
+import com.ngray.option.marketdata.MarketDataCollection;
+import com.ngray.option.model.ModelException;
 import com.ngray.option.risk.Risk;
 
 /**
@@ -23,7 +32,7 @@ public class Position {
 	private final double open;
 	
 	private double latest;
-	
+		
 	private double positionPnL;
 	
 	private Risk positionRisk;
@@ -43,8 +52,8 @@ public class Position {
 		this.instrument = FinancialInstrument.fromIGMarket(igPosition.getMarket());
 		
 		// initialize PnL and risk to NaN
-		this.positionPnL = Double.NaN;
-		this.positionRisk = new Risk();
+		initializePnL();
+		initializeRisk();
 	}
 	
 	/**
@@ -64,6 +73,41 @@ public class Position {
 		// initialize PnL and risk to NaN
 		this.positionPnL = Double.NaN;
 		this.positionRisk = new Risk();
+	}
+	
+	private void initializeRisk() {
+		if (igPosition != null) {
+			double bid = igPosition.getMarket().getBid();
+			double offer = igPosition.getMarket().getOffer();
+			Map<FinancialInstrument, MarketData> map = new HashMap<>();
+			map.put(instrument, new MarketData(instrument.getIdentifier(), bid, offer, Type.PRICE));
+			MarketDataCollection marketDataColl = new MarketDataCollection(map);
+		
+			if (instrument instanceof EuropeanOption) {
+				EuropeanOption option = (EuropeanOption) instrument;
+				double underlyingBid = option.getUnderlying().getIGMarket().getBid();
+				double underlyingOffer = option.getUnderlying().getIGMarket().getOffer();
+ 				map.put(option.getUnderlying(), new MarketData(option.getUnderlying().getIdentifier(), underlyingBid, underlyingOffer, Type.PRICE));
+			}
+		
+			try {
+				Risk riskOnOneContract = instrument.getModel().calculateRisk(instrument, marketDataColl, LocalDate.now());
+				updatePositionRisk(riskOnOneContract);
+			} catch (ModelException e) {
+				Log.getLogger().error(e.getMessage(), true);
+			}		
+		} 
+	}
+	
+	private void initializePnL() {
+		if (igPosition != null && positionSize > 0) {
+			latest =  igPosition.getMarket().getBid();
+			positionPnL = (latest - getOpen()) * getPositionSize();
+			
+		} else if (igPosition != null && positionSize < 0) {
+			latest = igPosition.getMarket().getOffer();
+			positionPnL = (latest - getOpen()) * getPositionSize();
+		}
 	}
 	
 	/**
