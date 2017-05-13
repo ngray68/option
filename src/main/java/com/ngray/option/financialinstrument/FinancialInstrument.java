@@ -57,5 +57,11 @@ public abstract class FinancialInstrument {
 	public Market getIGMarket() {
 		return igMarket;
 	}
+
+	/**
+	 * Return this for securities and the underlying for options
+	 * @return
+	 */
+	public abstract FinancialInstrument getUnderlying();
 	
 }

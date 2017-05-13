@@ -59,6 +59,17 @@ public class OptionReferenceDataMap {
 			Map<String, Market> markets1 = node1.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
 			Security underlyingEURUSD = new Security(markets1.get("EUR/USD"));
 			referenceData.put("Weekly EURUSD 10850 PUT", new OptionReferenceData("Weekly EURUSD 10850 PUT", underlyingEURUSD, 10850.0, LocalDate.of(2017, 5, 12), Type.PUT));
+		
+			RestAPIGet get2 = new RestAPIGet("/marketnavigation/97605");
+			RestAPIResponse response2 = get2.execute(session);
+			String json2 = response2.getResponseBodyAsJson();
+			MarketNode node2 = MarketNode.fromJson(json2);
+			Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+			Security underlying2 = new Security(markets2.get("IX.D.FTSE.DAILY.IP"));
+			// FTSE options
+			referenceData.put("FTSE 7325 PUT", new OptionReferenceData("FTSE 7325 PUT", underlying2, 7325.0, LocalDate.of(2017, 6, 16), Type.PUT));
+			referenceData.put("FTSE 7350 CALL", new OptionReferenceData("FTSE 7350 CALL", underlying2, 7350.0, LocalDate.of(2017, 6, 16), Type.CALL));
+		
 		} else {
 			RestAPIGet get = new RestAPIGet("/marketnavigation/93613");
 			RestAPIResponse response = get.execute(session);
@@ -77,6 +88,16 @@ public class OptionReferenceDataMap {
 			Map<String, Market> markets1 = node1.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
 			Security underlyingEURUSD = new Security(markets1.get("EUR/USD"));
 			referenceData.put("Weekly EURUSD 10850 PUT", new OptionReferenceData("Weekly EURUSD 10850 PUT", underlyingEURUSD, 10850.0, LocalDate.of(2017, 5, 12), Type.PUT));
+		
+			RestAPIGet get2 = new RestAPIGet("/marketnavigation/93334");
+			RestAPIResponse response2 = get2.execute(session);
+			String json2 = response2.getResponseBodyAsJson();
+			MarketNode node2 = MarketNode.fromJson(json2);
+			Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+			Security underlying2 = new Security(markets2.get("IX.D.FTSE.DAILY.IP"));
+			// FTSE options
+			referenceData.put("FTSE 7325 PUT", new OptionReferenceData("FTSE 7325 PUT", underlying2, 7325.0, LocalDate.of(2017, 6, 16), Type.PUT));
+			referenceData.put("FTSE 7350 CALL", new OptionReferenceData("FTSE 7350 CALL", underlying2, 7350.0, LocalDate.of(2017, 6, 16), Type.CALL));
 		}
 
 	}

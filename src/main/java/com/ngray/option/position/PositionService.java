@@ -3,8 +3,11 @@ package com.ngray.option.position;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.EuropeanOption;
@@ -56,8 +59,19 @@ public class PositionService {
 		} );
 	}
 	
+	// TODO the next three methods need to be made thread-safe when we add ability to update to positions in real time
 	public List<Position> getPositions() {
 		return Collections.unmodifiableList(positions);
+	}
+	
+	public List<Position> getPositions(FinancialInstrument underlying) {
+		return positions.stream().filter(position -> underlying.equals(position.getUnderlying())).collect(Collectors.toList());
+	}
+	
+	public Set<FinancialInstrument> getUnderlyings() {
+		Set<FinancialInstrument> underlyings = new HashSet<>();
+		positions.forEach(position -> underlyings.add(position.getUnderlying()));
+		return underlyings;
 	}
 	
 	public void subscribeToRiskService(Position position, RiskService riskService) {

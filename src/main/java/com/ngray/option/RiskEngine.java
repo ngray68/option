@@ -6,12 +6,14 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
-
+import java.util.List;
+import java.util.Set;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
@@ -104,21 +106,25 @@ public class RiskEngine {
 			positionService.subscribeAllToMarketDataService(marketDataService);
 			positionService.subscribeAllToRiskService(riskService);
 			
-			PositionRiskTableModel model = new PositionRiskTableModel(positionService.getPositions());
-			JTable table = new JTable(model);
-			JScrollPane pane = new JScrollPane(table);
-			JFrame frame = new JFrame();
-			frame.add(pane);
-			frame.pack();
-			EventQueue.invokeLater(()-> {
-				try {
-					frame.setVisible(true);
-				} catch (HeadlessException e) {
-					Log.getLogger().error(e.getMessage(), e);
-				}
+			Set<FinancialInstrument> underlyings = positionService.getUnderlyings();			
+			underlyings.forEach(underlying -> {
+				PositionRiskTableModel model = new PositionRiskTableModel(positionService.getPositions(underlying));
+				JTable table = new JTable(model);
+				JScrollPane pane = new JScrollPane(table);
+				JFrame frame = new JFrame();
+				frame.add(pane);
+				frame.pack();
+				frame.setTitle(underlying.toString());
+				EventQueue.invokeLater(()-> {
+					try {
+						frame.setVisible(true);
+					} catch (HeadlessException e) {
+						Log.getLogger().error(e.getMessage(), e);
+					}
+				});
+				
+				positionService.getPositions(underlying).forEach(position->positionService.addListener(position, model));
 			});
-			
-			positionService.getPositions().forEach(position->positionService.addListener(position, model));
 			while (true) {}
 			
 		} catch (SessionException e) {

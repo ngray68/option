@@ -48,4 +48,9 @@ public class Security extends FinancialInstrument {
 	public Model getModel() {
 		return new DeltaOneModel();
 	}
+
+	@Override
+	public FinancialInstrument getUnderlying() {
+		return this;
+	}
 }

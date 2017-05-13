@@ -46,7 +46,12 @@ public class Position {
 	public Position(IGPosition igPosition) throws MissingReferenceDataException {
 		this.igPosition = igPosition;
 		this.id = igPosition.getPositionDetail().getDealId();
-		this.positionSize = igPosition.getPositionDetail().getDealSize();
+		String direction = igPosition.getPositionDetail().getDirection();
+		if (direction.equals("BUY")) {
+			this.positionSize = igPosition.getPositionDetail().getDealSize();
+		} else {
+			this.positionSize = -igPosition.getPositionDetail().getDealSize();
+		}
 		this.open = igPosition.getPositionDetail().getOpenLevel();
 		this.latest = Double.NaN;
 		this.instrument = FinancialInstrument.fromIGMarket(igPosition.getMarket());
@@ -172,11 +177,21 @@ public class Position {
 	}
 
 	/**
-	 * Get the financial instrument underlying this position
+	 * Get the financial instrument for this position
 	 * @return
 	 */
 	public FinancialInstrument getInstrument() {
 		return instrument;
+	}
+	
+	/**
+	 * Get the financial instrument which is the underlying of the position's instrument
+	 * Will return the same as getInstrument for if the instrument is a delta-one product, or the underlying for
+	 * derivatives
+	 * @return
+	 */
+	public FinancialInstrument getUnderlying() {
+		return instrument.getUnderlying();
 	}
 
 	/**
