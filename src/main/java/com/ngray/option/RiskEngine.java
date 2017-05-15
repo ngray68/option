@@ -90,7 +90,9 @@ public class RiskEngine {
 		try {
 			session = Session.login(loginDetails, isLive);
 			// static data initialization
-			OptionReferenceDataMap.init(session);
+			//OptionReferenceDataMap.init(session);
+			String refDataFile = "/Users/nigelgray/Documents/OptionReferenceData.csv";
+			OptionReferenceDataMap.init(refDataFile, session);
 
 			String activeAccountId = session.getSessionInfo().getCurrentAccountId();
 			String lightStreamerEndpoint = session.getSessionInfo().getLightStreamerEndpoint();
@@ -105,7 +107,7 @@ public class RiskEngine {
 			positionService.initialize(session);
 			positionService.subscribeAllToMarketDataService(marketDataService);
 			positionService.subscribeAllToRiskService(riskService);
-			
+		
 			Set<FinancialInstrument> underlyings = positionService.getUnderlyings();			
 			underlyings.forEach(underlying -> {
 				PositionRiskTableModel model = new PositionRiskTableModel(positionService.getPositions(underlying));
@@ -114,7 +116,8 @@ public class RiskEngine {
 				JFrame frame = new JFrame();
 				frame.add(pane);
 				frame.pack();
-				frame.setTitle(underlying.toString());
+				frame.setTitle(underlying.getName());
+				
 				EventQueue.invokeLater(()-> {
 					try {
 						frame.setVisible(true);
@@ -125,6 +128,7 @@ public class RiskEngine {
 				
 				positionService.getPositions(underlying).forEach(position->positionService.addListener(position, model));
 			});
+		
 			while (true) {}
 			
 		} catch (SessionException e) {

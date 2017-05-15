@@ -115,7 +115,7 @@ public class PositionService {
 		
 		if (position.getInstrument() instanceof EuropeanOption) {
 			// we add a listener for the underlying price too so its available for risk calculations
-			// this listener's sole purpose is to force the market data service to subscribe to the underlying price
+			// this listener's purpose is to force the market data service to subscribe to the underlying price
 			FinancialInstrument underlying = ((EuropeanOption)position.getInstrument()).getUnderlying();
 			marketDataService.addListener(underlying, new MarketDataListener() {
 

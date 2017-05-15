@@ -19,9 +19,11 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 	private String[] columns = {
 			"Id",
 			"Security",
+			"Expiry",
 			"Size",
 			"Open",
 			"Latest",
+			"Underlying (Mid)",
 			"P&L",
 			"Imp Vol",
 			"Delta",
@@ -33,16 +35,18 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 	
 	private static final int ID_COL = 0;
 	private static final int SEC_COL = 1;
-	private static final int SIZE_COL = 2;
-	private static final int OPEN_COL = 3;
-	private static final int LATEST_COL = 4;
-	private static final int PNL_COL = 5;
-	private static final int IV_COL = 6;
-	private static final int DELTA_COL = 7;
-	private static final int GAMMA_COL = 8;
-	private static final int VEGA_COL = 9;
-	private static final int THETA_COL = 10;
-	private static final int RHO_COL = 11;
+	private static final int EXPIRY_COL = 2;
+	private static final int SIZE_COL = 3;
+	private static final int OPEN_COL = 4;
+	private static final int LATEST_COL = 5;
+	private static final int UNDERLYING_LATEST_COL = 6;
+	private static final int PNL_COL = 7;
+	private static final int IV_COL = 8;
+	private static final int DELTA_COL = 9;
+	private static final int GAMMA_COL = 10;
+	private static final int VEGA_COL = 11;
+	private static final int THETA_COL = 12;
+	private static final int RHO_COL = 13;
 	
 	private Object lock = new Object();
 	private volatile Object[][] data;
@@ -64,10 +68,12 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			this.positions.put(pos, i);
 			Risk risk = pos.getPositionRisk();
 			data[i][ID_COL] = pos.getId();
-			data[i][SEC_COL] = pos.getInstrument().getIdentifier();
+			data[i][SEC_COL] = pos.getInstrument().getName();
+			data[i][EXPIRY_COL] = pos.getInstrument().getIGMarket().getExpiry();
 			data[i][SIZE_COL] = pos.getPositionSize();
 			data[i][OPEN_COL] = pos.getOpen();
 			data[i][LATEST_COL] = pos.getLatest();
+			data[i][UNDERLYING_LATEST_COL] = pos.getUnderlyingLatest();
 			data[i][PNL_COL] = pos.getPositionPnL();
 			data[i][IV_COL] = risk.getImpliedVolatility();
 			data[i][DELTA_COL] = risk.getDelta();
@@ -143,6 +149,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 		synchronized(lock) {
 			int rowIndex = positions.get(position);
 			Risk risk = position.getPositionRisk();
+			data[rowIndex][UNDERLYING_LATEST_COL] = risk.getUnderlyingPrice();
 			data[rowIndex][IV_COL] = risk.getImpliedVolatility();
 			data[rowIndex][DELTA_COL] = risk.getDelta();
 			data[rowIndex][GAMMA_COL] = risk.getGamma();
@@ -187,10 +194,12 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 				switch (columnIndex) {
 					case ID_COL:
 					case SEC_COL:
+					case EXPIRY_COL:
 						return data[rowIndex][columnIndex];
 					case SIZE_COL:
 					case OPEN_COL:
 					case LATEST_COL:
+					case UNDERLYING_LATEST_COL:
 						formatter = NumberFormat.getNumberInstance();
 						formatter.setMinimumFractionDigits(1);
 						formatter.setMaximumFractionDigits(2);

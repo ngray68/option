@@ -1,5 +1,6 @@
 package com.ngray.option.risk;
 
+
 /**
  * Class encapsulating a consisent set of value/risk numbers
  * Objects of this type are immutable
@@ -16,6 +17,10 @@ public class Risk {
 	private final double rho;
 	private final double impliedVolatility;
 	
+	// data used to calculate this risk
+	private final double price;
+	private final double underlyingPrice;
+	
 	public Risk(double value, double delta, double gamma, double vega, double theta, double rho, double impliedVolatility) {
 		this.value = value;
 		this.delta = delta;
@@ -24,6 +29,20 @@ public class Risk {
 		this.theta = theta;
 		this.rho = rho;
 		this.impliedVolatility = impliedVolatility;
+		this.price = Double.NaN;
+		this.underlyingPrice = Double.NaN;
+	}
+	
+	public Risk(double value, double delta, double gamma, double vega, double theta, double rho, double impliedVolatility, double price, double underlyingPrice) {
+		this.value = value;
+		this.delta = delta;
+		this.gamma = gamma;
+		this.vega = vega;
+		this.theta = theta;
+		this.rho = rho;
+		this.impliedVolatility = impliedVolatility;
+		this.price = price;
+		this.underlyingPrice = underlyingPrice;
 	}
 
 	public Risk() {
@@ -34,6 +53,8 @@ public class Risk {
 		this.theta = Double.NaN;
 		this.rho = Double.NaN;
 		this.impliedVolatility = Double.NaN;
+		this.price = Double.NaN;
+		this.underlyingPrice = Double.NaN;
 	}
 	
 	public Risk multiply(double N) {
@@ -43,8 +64,8 @@ public class Risk {
 		double vega = getVega() * N;
 		double rho = getRho() * N;
 		double theta = getTheta() * N;
-		double impliedVol = getImpliedVolatility(); // this doesn't scale with position sze
-		return new Risk(value, delta, gamma, vega, theta, rho, impliedVol);
+		// imp vol and prices don't scale with position size
+		return new Risk(value, delta, gamma, vega, theta, rho, getImpliedVolatility(), getPrice(), getUnderlyingPrice());
 	}
 
 	public double getValue() {
@@ -90,4 +111,13 @@ public class Risk {
 		return s;
 				   
 	}
+
+	public double getPrice() {
+		return price;
+	}
+
+	public double getUnderlyingPrice() {
+		return underlyingPrice;
+	}
+
 }

@@ -33,7 +33,7 @@ public class DeltaOneModel implements Model {
 			if (!(price.getType() == Type.PRICE)) {
 				throw new ModelException("Market data must be a price for delta one security");
 			}
-			return new Risk(price.getMid(), 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+			return new Risk(price.getMid(), 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, price.getMid(), price.getMid());
 		} catch (MarketDataException e) {
 			throw new ModelException(e.getMessage());
 		}

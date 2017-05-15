@@ -1,17 +1,22 @@
 package com.ngray.option.ig.refdata;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.ngray.option.financialinstrument.EuropeanOption.Type;
+import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.market.Market;
 import com.ngray.option.ig.market.MarketNode;
+import com.ngray.option.ig.refdata.OptionReferenceData.Attribute;
 import com.ngray.option.ig.rest.RestAPIGet;
 import com.ngray.option.ig.rest.RestAPIResponse;
 
@@ -35,9 +40,72 @@ public class OptionReferenceDataMap {
 	}
 	
 	/**
+	 * Initialise reference data from file
+	 * Underlyings still hard-coded to some extent for now
+	 * @param filename
+	 * @param session
+	 * @throws SessionException
+	 */
+	public static void init(String filename, Session session) throws SessionException {
+		try {
+			Map<String, Market> underlyings = new HashMap<>();
+			if (session.getIsLive()) {
+				// Gold
+				RestAPIGet get = new RestAPIGet("/marketnavigation/93613");
+				RestAPIResponse response = get.execute(session);
+				String json = response.getResponseBodyAsJson();
+				MarketNode node = MarketNode.fromJson(json);
+				Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+				underlyings.putAll(markets);
+				
+				// FTSE
+				RestAPIGet get2 = new RestAPIGet("/marketnavigation/93334");
+				RestAPIResponse response2 = get2.execute(session);
+				String json2 = response2.getResponseBodyAsJson();
+				MarketNode node2 = MarketNode.fromJson(json2);
+				Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+				underlyings.putAll(markets2);
+				
+			} else {
+				//Gold
+				RestAPIGet get = new RestAPIGet("/marketnavigation/104139");
+				RestAPIResponse response = get.execute(session);
+				String json = response.getResponseBodyAsJson();
+				MarketNode node = MarketNode.fromJson(json);
+				Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+				underlyings.putAll(markets);
+				
+				// FTSE
+				RestAPIGet get2 = new RestAPIGet("/marketnavigation/97605");
+				RestAPIResponse response2 = get2.execute(session);
+				String json2 = response2.getResponseBodyAsJson();
+				MarketNode node2 = MarketNode.fromJson(json2);
+				Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+				underlyings.putAll(markets2);
+			}
+			List<Map<String, String>> refDataList = OptionReferenceDataLoader.loadFromFile(filename);
+			refDataList.forEach(
+					(entry) -> {
+						Security underlying = new Security(underlyings.get(entry.get(Attribute.UnderlyingEpic.toString())));
+						EuropeanOption.Type callOrPut = entry.get(Attribute.CallOrPut.toString()).equals("PUT") ? Type.PUT : Type.CALL;
+						double strike = Double.parseDouble(entry.get(Attribute.Strike.toString()));
+						LocalDate expiry = LocalDate.parse(entry.get(Attribute.Expiry.toString()));
+						double dividendYield = Double.parseDouble(entry.get(Attribute.DividendYield.toString()));
+						double riskFreeRate = Double.parseDouble(entry.get(Attribute.RiskFreeRate.toString()));
+						OptionReferenceData data = 
+								new OptionReferenceData(entry.get(Attribute.OptionEpic.toString()), underlying, strike, expiry, callOrPut, dividendYield, riskFreeRate);
+						referenceData.put(entry.get(Attribute.OptionEpic.toString()), data);
+					}
+					);
+		} catch (IOException | MissingReferenceDataException e) {
+			throw new SessionException(e.getMessage());
+		}
+	}
+/*	
+	/**
 	 * Initialize the reference data. For now this is hardcoded - should load from file
 	 * @throws SessionException 
-	 */
+	 
 	public static void init(Session session) throws SessionException {
 		
 		// Gold underlying
@@ -46,60 +114,44 @@ public class OptionReferenceDataMap {
 			RestAPIResponse response = get.execute(session);
 			String json = response.getResponseBodyAsJson();
 			MarketNode node = MarketNode.fromJson(json);
-			Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
-			Security underlying = new Security(markets.get("Gold"));
+			Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+			Security underlying = new Security(markets.get("MT.D.GC.MONTH1.IP"));
 			// Gold futures options
-			referenceData.put("Gold Futures 1285 PUT", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
-			referenceData.put("Gold Futures 1290 CALL", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
-		
-			RestAPIGet get1 = new RestAPIGet("/marketnavigation/196378");
-			RestAPIResponse response1 = get1.execute(session);
-			String json1 = response1.getResponseBodyAsJson();
-			MarketNode node1 = MarketNode.fromJson(json1);
-			Map<String, Market> markets1 = node1.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
-			Security underlyingEURUSD = new Security(markets1.get("EUR/USD"));
-			referenceData.put("Weekly EURUSD 10850 PUT", new OptionReferenceData("Weekly EURUSD 10850 PUT", underlyingEURUSD, 10850.0, LocalDate.of(2017, 5, 12), Type.PUT));
-		
+			referenceData.put("OP.D.GC1.1285P.IP", new OptionReferenceData("OP.D.GC1.1285P.IP", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
+			referenceData.put("OP.D.GC1.1290C.IP", new OptionReferenceData("OP.D.GC1.1290C.IP", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
+					
 			RestAPIGet get2 = new RestAPIGet("/marketnavigation/97605");
 			RestAPIResponse response2 = get2.execute(session);
 			String json2 = response2.getResponseBodyAsJson();
 			MarketNode node2 = MarketNode.fromJson(json2);
 			Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
-			Security underlying2 = new Security(markets2.get("IX.D.FTSE.DAILY.IP"));
+			Security underlying2 = new Security(markets2.get("IX.D.FTSE.MONTH1.IP"));
 			// FTSE options
-			referenceData.put("FTSE 7325 PUT", new OptionReferenceData("FTSE 7325 PUT", underlying2, 7325.0, LocalDate.of(2017, 6, 16), Type.PUT));
-			referenceData.put("FTSE 7350 CALL", new OptionReferenceData("FTSE 7350 CALL", underlying2, 7350.0, LocalDate.of(2017, 6, 16), Type.CALL));
-		
+			referenceData.put("OP.D.FTSE6.7325P.IP", new OptionReferenceData("OP.D.FTSE6.7325P.IP", underlying2, 7325.0, LocalDate.of(2017, 6, 16), Type.PUT));
+			referenceData.put("OP.D.FTSE6.7350C.IP", new OptionReferenceData("OP.D.FTSE6.7350C.IP", underlying2, 7350.0, LocalDate.of(2017, 6, 16), Type.CALL));
 		} else {
 			RestAPIGet get = new RestAPIGet("/marketnavigation/93613");
 			RestAPIResponse response = get.execute(session);
 			String json = response.getResponseBodyAsJson();
 			MarketNode node = MarketNode.fromJson(json);
-			Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
-			Security underlying = new Security(markets.get("Gold"));
+			Map<String, Market> markets = node.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+			Security underlying = new Security(markets.get("MT.D.GC.MONTH1.IP"));
 			// Gold futures options
-			referenceData.put("Gold Futures 1285 PUT", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
-			referenceData.put("Gold Futures 1290 CALL", new OptionReferenceData("Gold Futures 1285 PUT", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
-		
-			RestAPIGet get1 = new RestAPIGet("/marketnavigation/166904");
-			RestAPIResponse response1 = get1.execute(session);
-			String json1 = response1.getResponseBodyAsJson();
-			MarketNode node1 = MarketNode.fromJson(json1);
-			Map<String, Market> markets1 = node1.getMarkets().stream().collect(Collectors.toMap(Market::getInstrumentName, Function.identity()));
-			Security underlyingEURUSD = new Security(markets1.get("EUR/USD"));
-			referenceData.put("Weekly EURUSD 10850 PUT", new OptionReferenceData("Weekly EURUSD 10850 PUT", underlyingEURUSD, 10850.0, LocalDate.of(2017, 5, 12), Type.PUT));
+			referenceData.put("OP.D.GC1.1285P.IP", new OptionReferenceData("OP.D.GC1.1285P.IP", underlying, 1285.0, LocalDate.of(2017, 5, 25), Type.PUT));
+			referenceData.put("OP.D.GC1.1290C.IP", new OptionReferenceData("OP.D.GC1.1290C.IP", underlying, 1290.0, LocalDate.of(2017, 5, 25), Type.CALL));
 		
 			RestAPIGet get2 = new RestAPIGet("/marketnavigation/93334");
 			RestAPIResponse response2 = get2.execute(session);
 			String json2 = response2.getResponseBodyAsJson();
 			MarketNode node2 = MarketNode.fromJson(json2);
 			Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
-			Security underlying2 = new Security(markets2.get("IX.D.FTSE.DAILY.IP"));
+			Security underlying2 = new Security(markets2.get("IX.D.FTSE.MONTH1.IP"));
 			// FTSE options
-			referenceData.put("FTSE 7325 PUT", new OptionReferenceData("FTSE 7325 PUT", underlying2, 7325.0, LocalDate.of(2017, 6, 16), Type.PUT));
-			referenceData.put("FTSE 7350 CALL", new OptionReferenceData("FTSE 7350 CALL", underlying2, 7350.0, LocalDate.of(2017, 6, 16), Type.CALL));
+			referenceData.put("OP.D.FTSE6.7325P.IP", new OptionReferenceData("OP.D.FTSE6.7325P.IP", underlying2, 7325.0, LocalDate.of(2017, 6, 16), Type.PUT));
+			referenceData.put("OP.D.FTSE6.7350C.IP", new OptionReferenceData("OP.D.FTSE6.7350C.IP", underlying2, 7350.0, LocalDate.of(2017, 6, 16), Type.CALL));
 		}
 
 	}
+	*/
 
 }

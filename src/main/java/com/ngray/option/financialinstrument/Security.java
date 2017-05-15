@@ -12,7 +12,7 @@ public class Security extends FinancialInstrument {
 	}
 	
 	public Security(Market market) {
-		super(market.getInstrumentName(), market);
+		super(market.getEpic(), market);
 	}
 
 	// Overrides from Object

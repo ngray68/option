@@ -44,8 +44,8 @@ public class EuropeanOption extends FinancialInstrument {
 	}
 	
 	public EuropeanOption(Market market) throws MissingReferenceDataException {
-		super(market.getInstrumentName(), market);
-		OptionReferenceData refData = OptionReferenceDataMap.getOptionReferenceData(market.getInstrumentName());
+		super(market.getEpic(), market);
+		OptionReferenceData refData = OptionReferenceDataMap.getOptionReferenceData(market.getEpic());
 		this.underlying = refData.getUnderlying();
 		this.strike = refData.getStrike();
 		this.expiryDate = refData.getExpiryDate();

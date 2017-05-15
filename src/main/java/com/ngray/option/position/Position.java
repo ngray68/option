@@ -7,7 +7,6 @@ import java.util.Map;
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.FinancialInstrument;
-import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.position.IGPosition;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.marketdata.MarketData;
@@ -82,6 +81,7 @@ public class Position {
 	
 	private void initializeRisk() {
 		if (igPosition != null) {
+			Log.getLogger().info("Position: " + getId() + " initializing risk...");
 			double bid = igPosition.getMarket().getBid();
 			double offer = igPosition.getMarket().getOffer();
 			Map<FinancialInstrument, MarketData> map = new HashMap<>();
@@ -92,12 +92,14 @@ public class Position {
 				EuropeanOption option = (EuropeanOption) instrument;
 				double underlyingBid = option.getUnderlying().getIGMarket().getBid();
 				double underlyingOffer = option.getUnderlying().getIGMarket().getOffer();
- 				map.put(option.getUnderlying(), new MarketData(option.getUnderlying().getIdentifier(), underlyingBid, underlyingOffer, Type.PRICE));
+				MarketData underlyingPrice = new MarketData(option.getUnderlying().getIdentifier(), underlyingBid, underlyingOffer, Type.PRICE);
+ 				map.put(option.getUnderlying(), underlyingPrice );
 			}
 		
 			try {
 				Risk riskOnOneContract = instrument.getModel().calculateRisk(instrument, marketDataColl, LocalDate.now());
-				updatePositionRisk(riskOnOneContract);
+				positionRisk = riskOnOneContract.multiply(getPositionSize());
+				Log.getLogger().debug(positionRisk);
 			} catch (ModelException e) {
 				Log.getLogger().error(e.getMessage(), true);
 			}		
@@ -105,14 +107,18 @@ public class Position {
 	}
 	
 	private void initializePnL() {
+		Log.getLogger().info("Position: " + getId() + " initializing PnL...");
 		if (igPosition != null && positionSize > 0) {
+			Log.getLogger().debug("Long position - Using bid price " + igPosition.getMarket().getBid());
 			latest =  igPosition.getMarket().getBid();
 			positionPnL = (latest - getOpen()) * getPositionSize();
 			
 		} else if (igPosition != null && positionSize < 0) {
+			Log.getLogger().debug("Long position - Using offer price " + igPosition.getMarket().getBid());
 			latest = igPosition.getMarket().getOffer();
 			positionPnL = (latest - getOpen()) * getPositionSize();
 		}
+		Log.getLogger().debug(getPositionDetails());
 	}
 	
 	/**
@@ -236,5 +242,9 @@ public class Position {
 
 	public IGPosition getIgPosition() {
 		return igPosition;
+	}
+
+	public double getUnderlyingLatest() {
+		return positionRisk.getUnderlyingPrice();
 	}
 }

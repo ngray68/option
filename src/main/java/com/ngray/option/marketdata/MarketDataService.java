@@ -7,6 +7,7 @@ import java.util.Map;
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.stream.LivePriceStream;
+import com.ngray.option.marketdata.MarketData.Type;
 
 /**
  * A service to manage multi-threaded access to a MarketDataCache
@@ -87,9 +88,10 @@ public class MarketDataService {
 				Log.getLogger().debug("MarketDataService " + getName() + ": creating new subscription list for instrument " + instrument);
 				listeners.put(instrument, new ArrayList<>());
 				
+				// we want to initialize the service with the initial value of the price for the financial instrument in question
+				MarketData initialPrice = new MarketData(instrument.getIdentifier(), instrument.getIGMarket().getBid(), instrument.getIGMarket().getOffer(), Type.PRICE);
+				cache.insertMarketData(instrument, initialPrice);
 				// we also add a market data source for the instrument here, and start the source running
-				//sources.put(instrument,  new DummyMarketDataSource(instrument.getIdentifier(), instrument, this));
-				//executor.execute((Runnable)sources.get(instrument));
 				MarketDataPublisher publisher = (instr, marketData) -> publishMarketData(instr, marketData);
 				livePriceStream.addSubscription(instrument, publisher);
 				sources.put(instrument, publisher);

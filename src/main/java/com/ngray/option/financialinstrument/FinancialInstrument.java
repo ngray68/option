@@ -36,6 +36,14 @@ public abstract class FinancialInstrument {
 	}
 	
 	/**
+	 * Return a user friendly name for the instrument - default to the identifier if none is avialable
+	 * @return
+	 */
+	public String getName() {
+		if (igMarket != null) return igMarket.getInstrumentName();
+		return identifier;
+	}
+	/**
 	 * Return a Model object that can be used to value the financial instrument
 	 * @return
 	 */

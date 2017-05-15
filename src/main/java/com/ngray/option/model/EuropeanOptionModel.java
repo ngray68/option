@@ -6,6 +6,9 @@ import java.time.temporal.ChronoUnit;
 
 import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.FinancialInstrument;
+import com.ngray.option.ig.refdata.MissingReferenceDataException;
+import com.ngray.option.ig.refdata.OptionReferenceData;
+import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataCollection;
 import com.ngray.option.marketdata.MarketDataException;
@@ -50,9 +53,9 @@ public class EuropeanOptionModel implements Model {
 			long daysToExpiry = ChronoUnit.DAYS.between(valueDate, option.getExpiryDate());
 			double timeToExpiry = ((double)daysToExpiry)/365.0;
 			
-			// TODO
-			double dividendYield = 0.0; 
-			double riskFreeRate = 0.0025;
+			OptionReferenceData refData = OptionReferenceDataMap.getOptionReferenceData(option.getIdentifier());
+			double dividendYield = refData.getDividendYield() ; 
+			double riskFreeRate = refData.getRiskFreeRate();
 			
 			MarketData spotMarketData = marketData.getMarketData(option.getUnderlying());
 			MarketData optionPriceOrVol = marketData.getMarketData(option);
@@ -77,8 +80,10 @@ public class EuropeanOptionModel implements Model {
 			double vega = BlackScholesModel.calcOptionVega(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
 			double theta = BlackScholesModel.calcPutOptionTheta(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
 			double rho = BlackScholesModel.calcPutOptionRho(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
-			return new Risk(optionPrice, delta, gamma, vega, theta, rho, volatility);
+			return new Risk(optionPrice, delta, gamma, vega, theta, rho, volatility, optionPrice, spot);
 		} catch (MarketDataException e) {
+			throw new ModelException(e.getMessage());
+		} catch (MissingReferenceDataException e) {
 			throw new ModelException(e.getMessage());
 		}
 	}
@@ -89,15 +94,15 @@ public class EuropeanOptionModel implements Model {
 			long daysToExpiry = ChronoUnit.DAYS.between(valueDate, option.getExpiryDate());
 			double timeToExpiry = ((double)daysToExpiry)/365.0;
 			
-			// TODO
-			double dividendYield = 0.0; 
-			double riskFreeRate = 0.0025;
+			OptionReferenceData refData = OptionReferenceDataMap.getOptionReferenceData(option.getIdentifier());
+			double dividendYield = refData.getDividendYield() ; 
+			double riskFreeRate = refData.getRiskFreeRate();
 			
 			MarketData spotMarketData = marketData.getMarketData(option.getUnderlying());
 			MarketData optionPriceOrVol = marketData.getMarketData(option);
 			
 			if (spotMarketData.getType() != Type.PRICE) {
-				throw new ModelException("");
+				throw new ModelException("Expected price, got volatility");
 			}
 			double spot = spotMarketData.getMid();
 			
@@ -116,8 +121,10 @@ public class EuropeanOptionModel implements Model {
 			double vega = BlackScholesModel.calcOptionVega(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
 			double theta = BlackScholesModel.calcCallOptionTheta(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
 			double rho = BlackScholesModel.calcCallOptionRho(spot, strike, volatility, timeToExpiry, riskFreeRate, dividendYield);
-		return new Risk(optionPrice, delta, gamma, vega, theta, rho, volatility);
+			return new Risk(optionPrice, delta, gamma, vega, theta, rho, volatility, optionPrice, spot);
 		} catch (MarketDataException e) {
+			throw new ModelException(e.getMessage());
+		} catch (MissingReferenceDataException e) {
 			throw new ModelException(e.getMessage());
 		}
 	}
