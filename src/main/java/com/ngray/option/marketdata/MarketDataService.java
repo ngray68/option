@@ -162,6 +162,11 @@ public class MarketDataService {
 		notifyListeners(instrument);
 	}
 	
+	/**
+	 * Return how many listeners we currently have - for testing only
+	 * @param instrument
+	 * @return
+	 */
 	public int getListenerCount(FinancialInstrument instrument) {
 		Log.getLogger().info("MarketDataService " + getName() + ": getting subscription count for " + instrument);
 		if (instrument == null) return 0;
@@ -177,9 +182,29 @@ public class MarketDataService {
 		
 	}
 	
+	/**
+	 * Get the market data currently in the cache for the specified instrument
+	 * @param instrument
+	 * @return
+	 * @throws MarketDataException
+	 */
 	public MarketData getMarketData(FinancialInstrument instrument) throws MarketDataException {
 		MarketData marketData = cache.getMarketData(instrument);
 		if (marketData == null) throw new MarketDataException("MarketDataService " + getName() + ": no entry in cache for " + instrument);
 		return marketData;
+	}
+	
+	/**
+	 * Shutdown the service
+	 */
+	public void shutdown() {	
+		Log.getLogger().info("MarketDataService " + getName() + " shutdown");
+		synchronized(listenerLock) {
+			// remove all the market data publishers
+			sources.clear();
+			livePriceStream.disconnect();
+			// remove all the listeners
+			listeners.clear();
+		}
 	}
 }

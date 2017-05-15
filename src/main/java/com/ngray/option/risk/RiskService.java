@@ -165,4 +165,15 @@ public class RiskService {
 			return new Risk();
 		}
 	}
+	
+	/**
+	 * Shutdown the service
+	 */
+	public void shutdown() {
+		Log.getLogger().info("RiskService " + getName() + " shutdown");
+		synchronized(riskListenerLock) {
+			marketDataListeners.clear();
+			riskListeners.clear();
+		}
+	}
 }

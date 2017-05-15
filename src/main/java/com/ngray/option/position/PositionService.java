@@ -204,5 +204,12 @@ public class PositionService {
 			listenersCopy.forEach(listener -> listener.onPositionRiskUpdate(position));
 		}
 	}
+	
+	public void shutdown() {
+		Log.getLogger().info("PositionService " + getName() + " shutdown");
+		synchronized(listenerLock) {
+			listeners.clear();
+		}
+	}
 
 }

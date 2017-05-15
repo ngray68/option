@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -30,6 +29,13 @@ import com.ngray.option.ui.PositionRiskTableModel;
  *
  */
 public class RiskEngine {
+	
+	private static Session session = null;
+	private static LivePriceStream livePriceStream = null;
+	private static MarketDataService marketDataService = null;
+	private static RiskService riskService = null;
+	private static PositionService positionService = null;
+	private static Object waitLock = new Object();
 
 	private static String readFile(String fileName) throws IOException {
 		String result = "";
@@ -51,32 +57,17 @@ public class RiskEngine {
 	public static void main(String[] args) {
 		
 		String loginFileName = null;
+		String refDataFileName = null;
 		boolean isLive = false;
 		
-		if (args.length != 1 && args.length != 2) {
-			Log.getLogger().fatal("Usage: <logindetailsfile> [DEMO|LIVE (default DEMO]");
+		if (args.length != 3) {
+			Log.getLogger().fatal("Usage: <logindetailsfile> <optionrefdatafile> [DEMO|LIVE (default DEMO]");
 			return;
 		}
 		
-		if (args.length == 1 && (args[0].equals("DEMO") || args[0].equals("LIVE"))) {
-			Log.getLogger().fatal("Usage: <logindetailsfile> [DEMO|LIVE (default DEMO]");
-			return;
-		} else {
-			loginFileName = args[0];
-		}
-		
-		if (args.length == 2 && (args[0].equals("DEMO") || args[0].equals("LIVE"))) {
-			loginFileName = args[1];
-			isLive = args[0].equals("LIVE") ? true : false;		
-		} else if (args.length == 2 && (args[1].equals("DEMO") || args[1].equals("LIVE"))) {
-			loginFileName = args[0];
-			isLive = args[1].equals("LIVE") ? true : false;	
-		} else {
-			Log.getLogger().fatal("Usage: <logindetailsfile> [DEMO|LIVE (default DEMO]");
-			return;
-		}
-	
-		
+		loginFileName = args[0];
+		refDataFileName = args[1];
+		isLive = args[2].equals("LIVE") ? true : false;	
 		
 		SessionLoginDetails loginDetails = null;
 		try {
@@ -86,24 +77,21 @@ public class RiskEngine {
 			return;
 		}
 		
-		Session session = null;
 		try {
 			session = Session.login(loginDetails, isLive);
 			// static data initialization
-			//OptionReferenceDataMap.init(session);
-			String refDataFile = "/Users/nigelgray/Documents/OptionReferenceData.csv";
-			OptionReferenceDataMap.init(refDataFile, session);
+			OptionReferenceDataMap.init(refDataFileName, session);
 
 			String activeAccountId = session.getSessionInfo().getCurrentAccountId();
 			String lightStreamerEndpoint = session.getSessionInfo().getLightStreamerEndpoint();
 			String xst = session.getXSecurityToken();
 			String cst = session.getClientSecurityToken();
 			
-			LivePriceStream livePriceStream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
-			MarketDataService marketDataService = new MarketDataService("LIVE", livePriceStream);
-			RiskService riskService = new RiskService("LIVE", marketDataService, LocalDate.now());
+			livePriceStream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
+			marketDataService = new MarketDataService("LIVE", livePriceStream);
+			riskService = new RiskService("LIVE", marketDataService, LocalDate.now());
 			
-			PositionService positionService = new PositionService("LIVE");
+			positionService = new PositionService("LIVE");
 			positionService.initialize(session);
 			positionService.subscribeAllToMarketDataService(marketDataService);
 			positionService.subscribeAllToRiskService(riskService);
@@ -129,18 +117,34 @@ public class RiskEngine {
 				positionService.getPositions(underlying).forEach(position->positionService.addListener(position, model));
 			});
 		
-			while (true) {}
-			
-		} catch (SessionException e) {
-			Log.getLogger().fatal(e.getMessage(), e);
-			return;
-		}
-		
-		
-		
-		
-		
-		
-	}
+			Runtime.getRuntime().addShutdownHook(new Thread() {
 
+				@Override
+				public void run() {
+					shutdown();
+				}});
+			
+			// wait forever
+			synchronized(waitLock) {
+				waitLock.wait();
+			}
+		} catch (SessionException | InterruptedException e) {
+			Log.getLogger().fatal(e.getMessage(), e);
+		}		
+	}
+	
+	/**
+	 * Shutdown the risk engine
+	 */
+	public static void shutdown() {
+		Log.getLogger().info("RiskEngine shutdown initiated...");
+		if (marketDataService != null) marketDataService.shutdown();
+		if (riskService != null) riskService.shutdown();
+		if (positionService != null) positionService.shutdown();
+		try {
+			if (session != null) session.logout();
+		} catch (SessionException e) {
+			Log.getLogger().error("Error logging out of IG Session during shutdown", e);
+		}
+	}
 }
