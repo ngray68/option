@@ -89,11 +89,15 @@ public class MarketDataService {
 				listeners.put(instrument, new ArrayList<>());
 				
 				// we want to initialize the service with the initial value of the price for the financial instrument in question
-				MarketData initialPrice = new MarketData(instrument.getIdentifier(), instrument.getIGMarket().getBid(), instrument.getIGMarket().getOffer(), Type.PRICE);
-				cache.insertMarketData(instrument, initialPrice);
+				if (instrument.getIGMarket() != null) {
+					MarketData initialPrice = new MarketData(instrument.getIdentifier(), instrument.getIGMarket().getBid(), instrument.getIGMarket().getOffer(), Type.PRICE);
+					cache.insertMarketData(instrument, initialPrice);
+				}
 				// we also add a market data source for the instrument here, and start the source running
 				MarketDataPublisher publisher = (instr, marketData) -> publishMarketData(instr, marketData);
-				livePriceStream.addSubscription(instrument, publisher);
+				if (livePriceStream != null) {	
+					livePriceStream.addSubscription(instrument, publisher);
+				}
 				sources.put(instrument, publisher);
 			}
 			

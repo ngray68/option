@@ -26,7 +26,7 @@ public class TestDeltaOneModel {
 		when(security.getModel()).thenReturn(new DeltaOneModel());
 		
 		MarketDataCollection marketData = mock(MarketDataCollection.class);
-		when(marketData.getMarketData(security)).thenReturn(new MarketData(security.getIdentifier(), 7275.0, MarketData.Type.PRICE));
+		when(marketData.getMarketData(security)).thenReturn(new MarketData("Underlying", 7275.0, MarketData.Type.PRICE));
 	
 		
 		LocalDate valueDate = LocalDate.of(2017, 05, 16);

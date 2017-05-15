@@ -101,6 +101,10 @@ public class OptionReferenceDataMap {
 			throw new SessionException(e.getMessage());
 		}
 	}
+	
+	public static void insert(String key, OptionReferenceData data) {
+		referenceData.put(key, data);
+	}
 /*	
 	/**
 	 * Initialize the reference data. For now this is hardcoded - should load from file

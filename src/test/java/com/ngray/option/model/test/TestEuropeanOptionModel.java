@@ -7,6 +7,9 @@ import org.junit.Test;
 
 import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.EuropeanOption.Type;
+import com.ngray.option.ig.refdata.MissingReferenceDataException;
+import com.ngray.option.ig.refdata.OptionReferenceData;
+import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataCollection;
@@ -20,7 +23,7 @@ import static org.mockito.Mockito.*;
 public class TestEuropeanOptionModel {
 
 	@Test
-	public void testCalculateRiskForCall() throws MarketDataException, ModelException {
+	public void testCalculateRiskForCall() throws MarketDataException, ModelException, MissingReferenceDataException {
 		System.out.println("Testing EuropeanOptionModel with Call...");
 		Security underlying = mock(Security.class);
 		when(underlying.getIdentifier()).thenReturn("Underlying");
@@ -33,9 +36,14 @@ public class TestEuropeanOptionModel {
 		when(option.getIdentifier()).thenReturn("CallOption");
 		when(option.getModel()).thenReturn(new EuropeanOptionModel());
 		
+		OptionReferenceDataMap.insert(
+				"CallOption",
+				new OptionReferenceData("CallOption", underlying, 7275.0, LocalDate.of(2017, 06, 16), Type.CALL, 0.0, 0.0)
+				);
+		
 		MarketDataCollection marketData = mock(MarketDataCollection.class);
-		when(marketData.getMarketData(underlying)).thenReturn(new MarketData(underlying.getIdentifier(), 7275.0, MarketData.Type.PRICE));
-		when(marketData.getMarketData(option)).thenReturn(new MarketData(option.getIdentifier(), 78.5080, MarketData.Type.PRICE));
+		when(marketData.getMarketData(underlying)).thenReturn(new MarketData("Underlying", 7275.0, MarketData.Type.PRICE));
+		when(marketData.getMarketData(option)).thenReturn(new MarketData("CallOption", 78.5080, MarketData.Type.PRICE));
 		
 		LocalDate valueDate = LocalDate.of(2017, 05, 16);
 		Risk risk = option.getModel().calculateRisk(option, marketData, valueDate);
@@ -64,10 +72,13 @@ public class TestEuropeanOptionModel {
 		when(option.getModel()).thenReturn(new EuropeanOptionModel());
 		
 		MarketDataCollection marketData = mock(MarketDataCollection.class);
-		when(marketData.getMarketData(underlying)).thenReturn(new MarketData(underlying.getIdentifier(), 7275.0, MarketData.Type.PRICE));
-		when(marketData.getMarketData(option)).thenReturn(new MarketData(option.getIdentifier(), 78.5080, MarketData.Type.PRICE));
+		when(marketData.getMarketData(underlying)).thenReturn(new MarketData("Underlying", 7275.0, MarketData.Type.PRICE));
+		when(marketData.getMarketData(option)).thenReturn(new MarketData("PutOption", 78.5080, MarketData.Type.PRICE));
 		
-		
+		OptionReferenceDataMap.insert(
+				"PutOption",
+				new OptionReferenceData("CallOption", underlying, 7275.0, LocalDate.of(2017, 06, 16), Type.PUT, 0.0, 0.0)
+				);
 		LocalDate valueDate = LocalDate.of(2017, 05, 16);
 		Risk risk = option.getModel().calculateRisk(option, marketData, valueDate);
 		System.out.println(risk);
