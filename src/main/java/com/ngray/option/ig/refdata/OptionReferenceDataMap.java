@@ -44,9 +44,10 @@ public class OptionReferenceDataMap {
 	 * Underlyings still hard-coded to some extent for now
 	 * @param filename
 	 * @param session
+	 * @param fromResource 
 	 * @throws SessionException
 	 */
-	public static void init(String filename, Session session) throws SessionException {
+	public static void init(String filename, Session session, boolean fromResource) throws SessionException {
 		try {
 			Map<String, Market> underlyings = new HashMap<>();
 			if (session.getIsLive()) {
@@ -83,7 +84,13 @@ public class OptionReferenceDataMap {
 				Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
 				underlyings.putAll(markets2);
 			}
-			List<Map<String, String>> refDataList = OptionReferenceDataLoader.loadFromFile(filename);
+			
+			List<Map<String, String>> refDataList = null;
+			if (fromResource == true) {
+			   refDataList = OptionReferenceDataLoader.loadFromResource(filename);
+			} else {
+				refDataList = OptionReferenceDataLoader.loadFromFile(filename);
+			}
 			refDataList.forEach(
 					(entry) -> {
 						Security underlying = new Security(underlyings.get(entry.get(Attribute.UnderlyingEpic.toString())));

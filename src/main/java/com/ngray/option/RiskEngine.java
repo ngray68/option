@@ -59,15 +59,24 @@ public class RiskEngine {
 		String loginFileName = null;
 		String refDataFileName = null;
 		boolean isLive = false;
+		boolean fromResource = true;
 		
-		if (args.length != 3) {
-			Log.getLogger().fatal("Usage: <logindetailsfile> <optionrefdatafile> [DEMO|LIVE (default DEMO]");
+		if (args.length != 2 && args.length != 3) {
+			Log.getLogger().fatal("Usage: <logindetailsfile> [<optionrefdatafile>] DEMO|LIVE");
 			return;
 		}
 		
-		loginFileName = args[0];
-		refDataFileName = args[1];
-		isLive = args[2].equals("LIVE") ? true : false;	
+		if (args.length == 3) {
+			loginFileName = args[0];
+			refDataFileName = args[1];
+			isLive = args[2].equals("LIVE") ? true : false;
+			fromResource = false;
+		}
+		else if (args.length == 2) {
+			loginFileName = args[0];
+			refDataFileName = "/OptionReferenceData.csv";
+			isLive = args[1].equals("LIVE") ? true : false;
+		}
 		
 		SessionLoginDetails loginDetails = null;
 		try {
@@ -80,7 +89,7 @@ public class RiskEngine {
 		try {
 			session = Session.login(loginDetails, isLive);
 			// static data initialization
-			OptionReferenceDataMap.init(refDataFileName, session);
+			OptionReferenceDataMap.init(refDataFileName, session, fromResource);
 
 			String activeAccountId = session.getSessionInfo().getCurrentAccountId();
 			String lightStreamerEndpoint = session.getSessionInfo().getLightStreamerEndpoint();
