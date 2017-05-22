@@ -59,5 +59,12 @@ public class StreamManager {
 	public LivePriceStream getLivePriceStream() {
 		return livePriceStream;
 	}
+	
+	public void shutdown() {
+		Log.getLogger().info("Shutting down StreamManager...");
+		livePriceStream.shutdown();
+		positionUpdateStream.shutdown();
+		
+	}
 
 }

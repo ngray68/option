@@ -1,6 +1,8 @@
 package com.ngray.option.ig.stream;
 
-import com.lightstreamer.client.ClientListener;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.lightstreamer.client.ItemUpdate;
 import com.lightstreamer.client.LightstreamerClient;
 import com.lightstreamer.client.Subscription;
@@ -10,65 +12,25 @@ import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.market.Market;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketData.Type;
-import com.ngray.option.marketdata.MarketDataPublisher;
+import com.ngray.option.service.ServiceDataPublisher;
+import com.ngray.option.service.ServiceDataSource;
 
-public class LivePriceStream {
+public class LivePriceStream implements ServiceDataSource<FinancialInstrument, MarketData> {
 
 	private final static String MARKET_PATTERN = "MARKET:{epic}";
 	private final static String[] MARKET_FIELDS = { "BID", "OFFER" };
-	private LightstreamerClient client;
 	
-	public LivePriceStream(String lightStreamerEndpoint, String activeAccountId, String clientToken, String accountToken) {
-		this.client = new LightstreamerClient(lightStreamerEndpoint, null);
-		this.client.connectionDetails.setUser(activeAccountId);
+	private final LightstreamerClient client;
 	
-		String pwd = "CST-" + clientToken + "|XST-" + accountToken;
-		this.client.connectionDetails.setPassword(pwd);
-	
-		this.client.addListener(new ClientListener() {
-
-			@Override
-			public void onListenEnd(LightstreamerClient client) {
-				Log.getLogger().debug("onListenEnd");		
-			}
-
-			@Override
-			public void onListenStart(LightstreamerClient client) {
-				Log.getLogger().debug("onListenStart");
-			}
-
-			@Override
-			public void onPropertyChange(String property) {
-				Log.getLogger().debug("onPropertyChange: " + property);	
-			}
-
-			@Override
-			public void onServerError(int errorCode, String errorMessage) {
-				Log.getLogger().debug("onServerError: " + errorCode + ": " + errorMessage);		
-			}
-
-			@Override
-			public void onStatusChange(String status) {
-				Log.getLogger().debug("onStatusChange: " + status);	
-			}});
-		
-		Log.getLogger().info("Connecting to Lightstreamer server");
-		client.connect();
-	}
-	
+	private Map<FinancialInstrument, Subscription> subscriptions;
 	
 	public LivePriceStream(LightstreamerClient client) {
 		this.client = client;
+		this.subscriptions = new HashMap<>();
 	}
 
-
-	/**
-	 * Add a subscription to the lightstreamer client for the instrument.
-	 * Use the  MarketDataPublisher to publish streamed prices to the outside world
-	 * @param instrument
-	 * @param publisher
-	 */
-	public void addSubscription(FinancialInstrument instrument, MarketDataPublisher publisher) {
+	@Override
+	public void addSubscription(FinancialInstrument instrument, ServiceDataPublisher<FinancialInstrument, MarketData> publisher) {
 		Log.getLogger().info("Adding LivePriceStream subscription: " + instrument.getIdentifier());
 		if (instrument == null || publisher == null) {
 			Log.getLogger().error("LivePriceStream::addSubscription called with null parameter (FinancialInstrument or MarketDataPubliser) ignored");
@@ -121,7 +83,7 @@ public class LivePriceStream {
 				String offer = itemUpdate.getValue("OFFER");
 				double bidVal = Double.parseDouble(bid);
 				double offerVal = Double.parseDouble(offer);
-				publisher.publishMarketData(instrument, new MarketData(instrument.getIdentifier(), bidVal, offerVal, Type.PRICE));
+				publisher.publish(instrument, new MarketData(instrument.getIdentifier(), bidVal, offerVal, Type.PRICE));
 			}
 
 			@Override
@@ -155,18 +117,32 @@ public class LivePriceStream {
 			
 		};
 		
+		subscriptions.put(instrument, subs);
 		subs.addListener(subsListener);
 		client.subscribe(subs);
+		
 	}
 
-	/**
-	 * Disconnect from the Lightstreamer server
-	 */
-	public void disconnect() {
-		Log.getLogger().info("Disconnecting from Lightstreamer server");
-		if (client != null) {
-			client.disconnect();	
-		}
+	@Override
+	public void removeSubscription(FinancialInstrument instrument) {
+		if (subscriptions.containsKey(instrument)) {
+			Subscription subscription = subscriptions.get(instrument);
+			client.unsubscribe(subscription);
+			subscriptions.remove(instrument);
+		}	
 	}
-	
+
+	@Override
+	public void start() {
+		// nothing to do here
+	}
+
+	@Override
+	public void shutdown() {
+		Log.getLogger().info("Shutting down LivePriceStream...");
+		subscriptions.forEach((instrument, subscription) -> client.unsubscribe(subscription));
+		subscriptions.clear();	
+		// don't disconnect the lightstreamer client as it isn't owned by this
+	}
+
 }

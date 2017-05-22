@@ -18,6 +18,7 @@ import com.ngray.option.ig.SessionLoginDetails;
 import com.ngray.option.ig.position.IGPositionList;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.ig.stream.LivePriceStream;
+import com.ngray.option.ig.stream.StreamManager;
 
 public class TestLivePriceStream {
 
@@ -50,9 +51,10 @@ public class TestLivePriceStream {
 		String lightStreamerEndpoint = session.getSessionInfo().getLightStreamerEndpoint();
 		String xst = session.getXSecurityToken();
 		String cst = session.getClientSecurityToken();
-		LivePriceStream stream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
+		StreamManager streamManager = new StreamManager(lightStreamerEndpoint, activeAccountId, cst, xst);
+		LivePriceStream stream = streamManager.getLivePriceStream();//LivePriceStream stream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
 		assertTrue(stream != null);
-		stream.disconnect();
+		streamManager.shutdown();
 	}
 
 	@Test
@@ -63,7 +65,8 @@ public class TestLivePriceStream {
 		String lightStreamerEndpoint = session.getSessionInfo().getLightStreamerEndpoint();
 		String xst = session.getXSecurityToken();
 		String cst = session.getClientSecurityToken();
-		LivePriceStream stream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
+		StreamManager streamManager = new StreamManager(lightStreamerEndpoint, activeAccountId, cst, xst);
+		LivePriceStream stream = streamManager.getLivePriceStream();// new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
 		assertTrue(stream != null);
 		
 		// keep track of message  count
@@ -86,6 +89,6 @@ public class TestLivePriceStream {
 		Thread.sleep(30000);
 		Log.getLogger().info("Received " + count.get() + " messages");
 		assertTrue(count.get() > 0);
-		stream.disconnect();
+		streamManager.shutdown();
 	}
 }

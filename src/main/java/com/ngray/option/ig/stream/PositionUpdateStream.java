@@ -115,8 +115,10 @@ public class PositionUpdateStream implements ServiceDataSource<String, IGPositio
 
 	@Override
 	public void shutdown() {
-		lsClient.disconnect();
+		Log.getLogger().info("Shutting down LivePriceStream...");
+		subscriptions.forEach((accountId, subscription) -> lsClient.unsubscribe(subscription));
 		subscriptions.clear();	
+		// don't disconnect the lightstreamer client as it isn't owned by this
 	}
 
 }

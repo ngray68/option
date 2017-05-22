@@ -31,7 +31,7 @@ public class DummyMarketDataSource implements MarketDataPublisher, Runnable {
 		while (!stop && count > 0) {
 			double value = new Random().nextDouble();
 			MarketData marketData = new MarketData(instrument.getIdentifier(), value, Type.PRICE);
-			publishMarketData(instrument, marketData);
+			publish(instrument, marketData);
 			--count;
 			try {
 				Thread.sleep(10);
@@ -46,8 +46,8 @@ public class DummyMarketDataSource implements MarketDataPublisher, Runnable {
 	}
 
 	@Override
-	public void publishMarketData(FinancialInstrument instrument, MarketData marketData) {
-		service.publishMarketData(instrument, marketData);			
+	public void publish(FinancialInstrument instrument, MarketData marketData) {
+		service.publishData(instrument, marketData);			
 	}
 
 }

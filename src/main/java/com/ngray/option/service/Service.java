@@ -1,6 +1,7 @@
 package com.ngray.option.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class Service<K, V> {
 	private final ServiceDataSource<K, V> dataSource;
 	
 	/**
-	 * Construct a named service
+	 * Construct a named service, with the given data source
 	 * @param name
 	 */
 	public Service(String name, ServiceDataSource<K,V> dataSource) {
@@ -47,6 +48,21 @@ public class Service<K, V> {
 	 */
 	public String getName() {
 		return name;
+	}
+	
+	/**
+	 * Return the listeners associated with the given key
+	 * Returns an empty list if there are none
+	 * @param key
+	 * @return
+	 */
+	public List<ServiceListener<K,V>> getListeners(K key) {
+		synchronized(listenerLock) {
+			if (listeners.containsKey(key)) {
+				return Collections.unmodifiableList(listeners.get(key));
+			}
+		}
+		return new ArrayList<>();
 	}
 	
 	/**
@@ -107,8 +123,11 @@ public class Service<K, V> {
 	 * @param key
 	 * @return
 	 */
-	public V getData(K key) {
+	public V getData(K key) throws ServiceException {
 		Log.getLogger().info("Service " + getName() + ": getData Key: " + key);
+		if (!cache.containsKey(key)) {
+			throw new ServiceException("Service " + getName() + ": missing entry with key " + key);
+		}
 		return cache.get(key);
 	}
 	

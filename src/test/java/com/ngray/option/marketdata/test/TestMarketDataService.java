@@ -14,13 +14,15 @@ import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataService;
+import com.ngray.option.service.ServiceDataSource;
+import com.ngray.option.service.ServiceListener;
 import com.ngray.option.marketdata.MarketDataPublisher;
 import com.ngray.option.marketdata.MarketData.Type;
 import com.ngray.option.marketdata.MarketDataListener;
 
 public class TestMarketDataService {
 	
-	private MarketDataService service = new MarketDataService("TestMarketDataService");
+	private MarketDataService service = new MarketDataService("Test", null);
 	
 	public class TestMarketDataSource implements Runnable, MarketDataPublisher {
 		
@@ -48,7 +50,7 @@ public class TestMarketDataService {
 			while (count > 0) {
 				double value = new Random().nextDouble();
 				MarketData marketData = new MarketData(instrument.getIdentifier(), value, Type.PRICE);
-				publishMarketData(instrument, marketData);
+				publish(instrument, marketData);
 				--count;
 				try {
 					Thread.sleep(10);
@@ -59,8 +61,8 @@ public class TestMarketDataService {
 		}
 
 		@Override
-		public void publishMarketData(FinancialInstrument instrument, MarketData marketData) {
-			service.publishMarketData(instrument, marketData);			
+		public void publish(FinancialInstrument instrument, MarketData marketData) {
+			service.publishData(instrument, marketData);			
 		}
 	}
 	
@@ -75,20 +77,20 @@ public class TestMarketDataService {
 		executor.execute(source);
 		
 		FinancialInstrument security = new Security("1");
-		int listenerCount = service.getListenerCount(security);
+		int listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 0);
 		service.addListener(security, 
 				(instrument, marketData) -> { Log.getLogger().info("Listener 1 - Received: " + instrument + "\t" + marketData); } 
 				);
 		
-		listenerCount = service.getListenerCount(security);
+		listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 1);
 		
 		service.addListener(security, 
 				(instrument, marketData) -> { Log.getLogger().info("Listener 2 - Received: " + instrument + "\t" + marketData); } 
 				);
 		
-		listenerCount = service.getListenerCount(security);
+		listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 2);
 		
 		executor.shutdown();
@@ -107,17 +109,17 @@ public class TestMarketDataService {
 		executor.execute(source);
 		
 		FinancialInstrument security = new Security("1");
-		int listenerCount = service.getListenerCount(security);
+		int listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 0);
-		MarketDataListener listener1 = service.addListener(security, 
+		ServiceListener<FinancialInstrument, MarketData> listener1 = service.addListener(security, 
 				(instrument, marketData) -> { Log.getLogger().info("Listener 1 - Received: " + instrument + "\t" + marketData); } 
 				);
 		
-		MarketDataListener listener2 = service.addListener(security, 
+		ServiceListener<FinancialInstrument, MarketData> listener2 = service.addListener(security, 
 				(instrument, marketData) -> { Log.getLogger().info("Listener 2 - Received: " + instrument + "\t" + marketData); } 
 				);
 		
-		listenerCount = service.getListenerCount(security);
+		listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 2);
 		
 		// hang around for 5 seconds so the listeners can receive some messages
@@ -125,11 +127,11 @@ public class TestMarketDataService {
 		
 		// now remove them
 		service.removeListener(security, listener1);
-		listenerCount = service.getListenerCount(security);
+		listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 1);
 		
 		service.removeListener(security, listener2);
-		listenerCount = service.getListenerCount(security);
+		listenerCount = service.getListeners(security).size();
 		assertTrue(listenerCount == 0);
 
 		executor.shutdown();

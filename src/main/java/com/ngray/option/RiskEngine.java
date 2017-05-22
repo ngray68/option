@@ -100,7 +100,7 @@ public class RiskEngine {
 			String cst = session.getClientSecurityToken();
 			
 			StreamManager streamManager = new StreamManager(lightStreamerEndpoint, activeAccountId, cst, xst);
-			marketDataService = new MarketDataService("LIVE", streamManager.getLivePriceStream());
+			marketDataService = new MarketDataService("MarketData-LIVE", streamManager.getLivePriceStream());
 			positionUpdateService = new PositionUpdateService("PositionUpdate-LIVE", streamManager.getPositionUpdateStream());
 			//livePriceStream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
 			//marketDataService = new MarketDataService("LIVE", livePriceStream);

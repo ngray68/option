@@ -14,6 +14,7 @@ import com.ngray.option.marketdata.MarketDataException;
 import com.ngray.option.marketdata.MarketDataListener;
 import com.ngray.option.marketdata.MarketDataService;
 import com.ngray.option.model.ModelException;
+import com.ngray.option.service.ServiceException;
 
 /**
  * A service to manage multi-threaded access to a RiskCache
@@ -71,10 +72,10 @@ public class RiskService {
 				riskListeners.put(instrument, new ArrayList<>());
 				
 				MarketDataListener marketDataListener = 
-						marketDataService.addListener(instrument, new MarketDataListener() {
+						(MarketDataListener)marketDataService.addListener(instrument, new MarketDataListener() {
 
 							@Override
-							public void onMarketDataUpdate(FinancialInstrument instrument, MarketData marketData) {
+							public void onUpdate(FinancialInstrument instrument, MarketData marketData) {
 								publishRisk(instrument, calculateRisk(instrument, marketData));
 							}
 							
@@ -154,13 +155,13 @@ public class RiskService {
 			
 			if (instrument instanceof EuropeanOption) {
 				EuropeanOption option = (EuropeanOption) instrument;
-				MarketData underlyingPrice = marketDataService.getMarketData(option.getUnderlying()); 
+				MarketData underlyingPrice = marketDataService.getData(option.getUnderlying()); 
 				map.put(option.getUnderlying(), underlyingPrice);
 			}
 		
 			MarketDataCollection marketDataCollection = new MarketDataCollection(map);
 			return instrument.getModel().calculateRisk(instrument, marketDataCollection, valueDate);
-		} catch (ModelException | MarketDataException e) {
+		} catch (ModelException | ServiceException e) {
 			Log.getLogger().error("RiskService " + getName() + ": " + e.getMessage(), e);
 			return new Risk();
 		}

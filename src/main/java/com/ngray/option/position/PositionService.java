@@ -272,11 +272,12 @@ public class PositionService {
 	
 	protected void subscribeToMarketDataService(Position position, MarketDataService marketDataService) {
 		Log.getLogger().info("Position " + position.getId() + ": subcribing to MarketDataService " + marketDataService.getName());
+		
 		MarketDataListener marketDataListener = 
-				marketDataService.addListener(position.getInstrument(), new MarketDataListener() {
+				(MarketDataListener)marketDataService.addListener(position.getInstrument(), new MarketDataListener() {
 
 				@Override
-				public void onMarketDataUpdate(FinancialInstrument instrument, MarketData marketData) {
+				public void onUpdate(FinancialInstrument instrument, MarketData marketData) {
 					if (!instrument.equals(position.getInstrument())) {
 						Log.getLogger().warn("MarketDataListener::onMarketDataUpdate called with instrument: " + 
 					                          instrument + ", expected: " + position.getInstrument() + ", update ignored");
@@ -301,10 +302,10 @@ public class PositionService {
 			// we add a listener for the underlying price too so its available for risk calculations
 			// this listener's purpose is to force the market data service to subscribe to the underlying price
 			FinancialInstrument underlying = ((EuropeanOption)position.getInstrument()).getUnderlying();
-			MarketDataListener listener = marketDataService.addListener(underlying, new MarketDataListener() {
+			MarketDataListener listener = (MarketDataListener)marketDataService.addListener(underlying, new MarketDataListener() {
 
 				@Override
-				public void onMarketDataUpdate(FinancialInstrument instrument, MarketData marketData) {
+				public void onUpdate(FinancialInstrument instrument, MarketData marketData) {
 					if (!instrument.equals(underlying)) {
 						Log.getLogger().warn("MarketDataListener::onMarketDataUpdate called with instrument: " + 
 					                          instrument + ", expected: " + underlying + ", update ignored");
