@@ -18,8 +18,10 @@ import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.ig.stream.LivePriceStream;
+import com.ngray.option.ig.stream.StreamManager;
 import com.ngray.option.marketdata.MarketDataService;
 import com.ngray.option.position.PositionService;
+import com.ngray.option.position.PositionUpdateService;
 import com.ngray.option.risk.RiskService;
 import com.ngray.option.ui.PositionRiskTableModel;
 
@@ -36,6 +38,7 @@ public class RiskEngine {
 	private static RiskService riskService = null;
 	private static PositionService positionService = null;
 	private static Object waitLock = new Object();
+	private static PositionUpdateService positionUpdateService;
 
 	private static String readFile(String fileName) throws IOException {
 		String result = "";
@@ -96,14 +99,18 @@ public class RiskEngine {
 			String xst = session.getXSecurityToken();
 			String cst = session.getClientSecurityToken();
 			
-			livePriceStream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
-			marketDataService = new MarketDataService("LIVE", livePriceStream);
+			StreamManager streamManager = new StreamManager(lightStreamerEndpoint, activeAccountId, cst, xst);
+			marketDataService = new MarketDataService("LIVE", streamManager.getLivePriceStream());
+			positionUpdateService = new PositionUpdateService("PositionUpdate-LIVE", streamManager.getPositionUpdateStream());
+			//livePriceStream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
+			//marketDataService = new MarketDataService("LIVE", livePriceStream);
 			riskService = new RiskService("LIVE", marketDataService, LocalDate.now());
 			
-			positionService = new PositionService("LIVE");
-			positionService.initialize(session);
-			positionService.subscribeAllToMarketDataService(marketDataService);
-			positionService.subscribeAllToRiskService(riskService);
+			positionService = new PositionService("LIVE", session, riskService, marketDataService, positionUpdateService);
+			positionService.initialize();
+			//positionService.subscribeAllToMarketDataService(marketDataService);
+			//positionService.subscribeAllToRiskService(riskService);
+			//positionService.subscribeToPositionUpdateService(positionUpdateService);
 		
 			Set<FinancialInstrument> underlyings = positionService.getUnderlyings();			
 			underlyings.forEach(underlying -> {
@@ -123,7 +130,8 @@ public class RiskEngine {
 					}
 				});
 				
-				positionService.getPositions(underlying).forEach(position->positionService.addListener(position, model));
+				positionService.addListener(underlying, model);
+				//positionService.getPositions(underlying).forEach(position->positionService.addListener(position, model));
 			});
 		
 			Runtime.getRuntime().addShutdownHook(new Thread() {

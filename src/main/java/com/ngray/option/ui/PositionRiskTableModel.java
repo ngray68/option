@@ -48,8 +48,8 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 	private static final int THETA_COL = 12;
 	private static final int RHO_COL = 13;
 	
-	private Object lock = new Object();
-	private volatile Object[][] data;
+	private final Object lock = new Object();
+	private Object[][] data;			// the array doesn't need to be volatile
 	
 	private Map<Position, Integer> positions;
 	
@@ -164,14 +164,97 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			data[data.length - 1][THETA_COL] = newRisk[3];
 			data[data.length - 1][RHO_COL] = newRisk[4];
 			
-			//fireTableCellUpdated(rowIndex, 6);
-			//fireTableCellUpdated(rowIndex, 7);
-			//fireTableCellUpdated(rowIndex, 8);
-			//fireTableCellUpdated(rowIndex, 10);
-			//fireTableCellUpdated(rowIndex, 11);
 			fireTableRowsUpdated(rowIndex, rowIndex);
 			fireTableRowsUpdated(data.length -1, data.length -1);
 			
+		}
+	}
+	
+	@Override
+	public void onOpenPosition(Position position) {
+		synchronized(lock) {
+			
+			Object[][] newData = new Object[data.length + 1][columns.length];
+			
+			// copy all the existing positions
+			for (int i = 0; i < newData.length - 2; ++i) {
+				newData[i] = data[i];
+			}
+			
+			// insert the new position		
+			Risk risk = position.getPositionRisk();
+			int newRow = newData.length - 2;
+			
+			newData[newRow][ID_COL] = position.getId();
+			newData[newRow][SEC_COL] = position.getInstrument().getName();
+			newData[newRow][EXPIRY_COL] = position.getInstrument().getIGMarket().getExpiry();
+			newData[newRow][SIZE_COL] = position.getPositionSize();
+			newData[newRow][OPEN_COL] = position.getOpen();
+			newData[newRow][LATEST_COL] = position.getLatest();
+			newData[newRow][UNDERLYING_LATEST_COL] = position.getUnderlyingLatest();
+			newData[newRow][PNL_COL] = position.getPositionPnL();
+			newData[newRow][IV_COL] = risk.getImpliedVolatility();
+			newData[newRow][DELTA_COL] = risk.getDelta();
+			newData[newRow][GAMMA_COL] = risk.getGamma();
+			newData[newRow][VEGA_COL] = risk.getVega();
+			newData[newRow][THETA_COL] = risk.getTheta();
+			newData[newRow][RHO_COL] = risk.getRho();
+			
+			double[] newRisk = calculateTotalRisk();
+			newData[newData.length - 1][ID_COL] = "Total";
+			newData[newData.length - 1][DELTA_COL] = newRisk[0];
+			newData[newData.length - 1][GAMMA_COL] = newRisk[1];
+			newData[newData.length - 1][VEGA_COL] = newRisk[2];
+			newData[newData.length - 1][THETA_COL] = newRisk[3];
+			newData[newData.length - 1][RHO_COL] = newRisk[4];
+			newData[newData.length - 1][PNL_COL] = calculateTotalPnL();	
+			
+			positions.put(position, newRow);
+			data = newData;
+			fireTableDataChanged();
+		}
+		
+	}
+
+	@Override
+	public void onDeletePosition(Position position) {
+		synchronized(lock) {
+			int rowIndex = positions.get(position);
+			
+			Object[][] newData = new Object[data.length - 1][columns.length];
+			Map<Position, Integer> newPositions = new HashMap<Position, Integer>();
+			int j = 0;
+			for (Position pos : positions.keySet()) {
+				int i = positions.get(pos);
+				if (i != rowIndex) {
+					newPositions.put(pos, j);
+					newData[j] = data[i];
+					++j;
+				}
+			}
+			
+			positions = newPositions;
+			data = newData;
+			double[] newRisk = calculateTotalRisk();
+			data[data.length - 1][ID_COL] = "Total";
+			data[data.length - 1][DELTA_COL] = newRisk[0];
+			data[data.length - 1][GAMMA_COL] = newRisk[1];
+			data[data.length - 1][VEGA_COL] = newRisk[2];
+			data[data.length - 1][THETA_COL] = newRisk[3];
+			data[data.length - 1][RHO_COL] = newRisk[4];
+			data[data.length - 1][PNL_COL] = calculateTotalPnL();	
+			fireTableDataChanged();
+		}	
+	}
+
+	@Override
+	public void onUpdatePosition(Position position) {
+		synchronized(lock) {
+			int rowIndex = positions.get(position);
+			data[rowIndex][SIZE_COL] = position.getPositionSize();
+			onPositionPnLUpdate(position);
+			onPositionRiskUpdate(position);
+			fireTableRowsUpdated(rowIndex, rowIndex);
 		}
 	}
 

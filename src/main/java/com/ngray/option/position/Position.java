@@ -26,7 +26,7 @@ public class Position {
 	
 	private final FinancialInstrument instrument;
 	
-	private final double positionSize;
+	private double positionSize;
 	
 	private final double open;
 	
@@ -55,10 +55,11 @@ public class Position {
 		this.latest = Double.NaN;
 		this.instrument = FinancialInstrument.fromIGMarket(igPosition.getMarket());
 		
-		// initialize PnL and risk to NaN
+		// initialize PnL and risk
 		initializePnL();
 		initializeRisk();
 	}
+	
 	
 	/**
 	 * Construct a position of size positionSize, in the instrument supplied at price open
@@ -207,6 +208,19 @@ public class Position {
 	public double getPositionSize() {
 		return positionSize;
 	}
+	
+	/**
+	 * Set the position size the supplied value and scale risk and pnl accordingly
+	 * @param positionSize
+	 */
+	public void amendPositionSize(double positionSize) {
+		double prevPositionSize = this.positionSize;
+		this.positionSize = positionSize;	
+		positionRisk = positionRisk.multiply(Math.abs(positionSize/prevPositionSize));
+		positionPnL = positionPnL * Math.abs(positionSize/prevPositionSize);
+	}
+	
+	
 
 	/**
 	 * Get the position PnL
@@ -247,4 +261,6 @@ public class Position {
 	public double getUnderlyingLatest() {
 		return positionRisk.getUnderlyingPrice();
 	}
+
+	
 }

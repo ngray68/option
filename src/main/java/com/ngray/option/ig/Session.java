@@ -8,11 +8,13 @@ import org.apache.http.message.BasicHeader;
 
 import com.ngray.option.Log;
 import com.ngray.option.ig.SessionException;
+import com.ngray.option.ig.position.IGPosition;
 import com.ngray.option.ig.position.IGPositionList;
 import com.ngray.option.ig.rest.RestAPIDelete;
 import com.ngray.option.ig.rest.RestAPIGet;
 import com.ngray.option.ig.rest.RestAPIPost;
 import com.ngray.option.ig.rest.RestAPIResponse;
+import com.ngray.option.position.Position;
 
 
 /**
@@ -150,5 +152,18 @@ public final class Session {
 		RestAPIResponse response = get.execute(this);
 		String json = response.getResponseBodyAsJson();
 		return IGPositionList.fromJson(json);
+	}
+
+	/**
+	 * Return the open position specified by the dealId
+	 * @param dealId
+	 * @return
+	 * @throws SessionException
+	 */
+	public IGPosition getPosition(String dealId) throws SessionException {
+		RestAPIGet get = new RestAPIGet("/positions/" + dealId);
+		RestAPIResponse response = get.execute(this);
+		String json = response.getResponseBodyAsJson();
+		return IGPosition.fromJson(json);
 	}
 }

@@ -57,6 +57,11 @@ public class LivePriceStream {
 	}
 	
 	
+	public LivePriceStream(LightstreamerClient client) {
+		this.client = client;
+	}
+
+
 	/**
 	 * Add a subscription to the lightstreamer client for the instrument.
 	 * Use the  MarketDataPublisher to publish streamed prices to the outside world
