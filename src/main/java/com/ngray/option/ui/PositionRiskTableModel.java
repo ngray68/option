@@ -165,15 +165,13 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			data[data.length - 1][RHO_COL] = newRisk[4];
 			
 			fireTableRowsUpdated(rowIndex, rowIndex);
-			fireTableRowsUpdated(data.length -1, data.length -1);
-			
+			fireTableRowsUpdated(data.length -1, data.length -1);			
 		}
 	}
 	
 	@Override
 	public void onOpenPosition(Position position) {
-		synchronized(lock) {
-			
+		synchronized(lock) {		
 			Object[][] newData = new Object[data.length + 1][columns.length];
 			
 			// copy all the existing positions
@@ -212,8 +210,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			positions.put(position, newRow);
 			data = newData;
 			fireTableDataChanged();
-		}
-		
+		}		
 	}
 
 	@Override
@@ -261,7 +258,9 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 	// AbstractTableModel overrides
 	@Override
 	public int getRowCount() {
-		return data.length;
+		synchronized(lock) {
+			return data.length;
+		}
 	}
 
 	@Override

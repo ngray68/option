@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.ngray.option.financialinstrument.EuropeanOption.Type;
+import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.Session;
@@ -66,6 +67,14 @@ public class OptionReferenceDataMap {
 				Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
 				underlyings.putAll(markets2);
 				
+				// Major FX 
+				RestAPIGet get3 = new RestAPIGet("/marketnavigation/191731");
+				RestAPIResponse response3 = get3.execute(session);
+				String json3 = response3.getResponseBodyAsJson();
+				MarketNode node3 = MarketNode.fromJson(json3);
+				Map<String, Market> markets3 = node3.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+				underlyings.putAll(markets3);	
+	
 			} else {
 				//Gold
 				RestAPIGet get = new RestAPIGet("/marketnavigation/104139");
@@ -82,6 +91,14 @@ public class OptionReferenceDataMap {
 				MarketNode node2 = MarketNode.fromJson(json2);
 				Map<String, Market> markets2 = node2.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
 				underlyings.putAll(markets2);
+				
+				// Major FX
+				RestAPIGet get3 = new RestAPIGet("/marketnavigation/425881");
+				RestAPIResponse response3 = get3.execute(session);
+				String json3 = response3.getResponseBodyAsJson();
+				MarketNode node3 = MarketNode.fromJson(json3);
+				Map<String, Market> markets3 = node3.getMarkets().stream().collect(Collectors.toMap(Market::getEpic, Function.identity()));
+				underlyings.putAll(markets3);		
 			}
 			
 			List<Map<String, String>> refDataList = null;
@@ -92,15 +109,20 @@ public class OptionReferenceDataMap {
 			}
 			refDataList.forEach(
 					(entry) -> {
-						Security underlying = new Security(underlyings.get(entry.get(Attribute.UnderlyingEpic.toString())));
 						EuropeanOption.Type callOrPut = entry.get(Attribute.CallOrPut.toString()).equals("PUT") ? Type.PUT : Type.CALL;
 						double strike = Double.parseDouble(entry.get(Attribute.Strike.toString()));
 						LocalDate expiry = LocalDate.parse(entry.get(Attribute.Expiry.toString()));
 						double dividendYield = Double.parseDouble(entry.get(Attribute.DividendYield.toString()));
 						double riskFreeRate = Double.parseDouble(entry.get(Attribute.RiskFreeRate.toString()));
-						OptionReferenceData data = 
-								new OptionReferenceData(entry.get(Attribute.OptionEpic.toString()), underlying, strike, expiry, callOrPut, dividendYield, riskFreeRate);
-						referenceData.put(entry.get(Attribute.OptionEpic.toString()), data);
+						Market underlyingMarket = underlyings.get(entry.get(Attribute.UnderlyingEpic.toString()));
+						if (underlyingMarket != null) {
+							Security underlying = new Security(underlyingMarket);
+							OptionReferenceData data = 
+									new OptionReferenceData(entry.get(Attribute.OptionEpic.toString()), underlying, strike, expiry, callOrPut, dividendYield, riskFreeRate);
+							referenceData.put(entry.get(Attribute.OptionEpic.toString()), data);
+						} else {
+							Log.getLogger().info(underlyings.get(entry.get(Attribute.UnderlyingEpic.toString())) + " doesn't exist (eg. expired) - ignoring all options with this underlying"); 
+						}
 					}
 					);
 		} catch (IOException | MissingReferenceDataException e) {

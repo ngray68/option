@@ -57,9 +57,14 @@ public class Service<K, V> {
 	 * @return
 	 */
 	public List<ServiceListener<K,V>> getListeners(K key) {
+		List<ServiceListener<K,V>> listenersCopy = null;
 		synchronized(listenerLock) {
 			if (listeners.containsKey(key)) {
-				return Collections.unmodifiableList(listeners.get(key));
+				// the list might still be modified by a different thread, making
+				// operations on the unmodifiable view dangerous - lets use a copy of
+				// the list instead
+				//return Collections.unmodifiableList(listeners.get(key));
+				return new ArrayList<>(listeners.get(key));
 			}
 		}
 		return new ArrayList<>();
@@ -137,7 +142,7 @@ public class Service<K, V> {
 	 * @param value
 	 */
 	public void publishData(K key, V value) {
-		Log.getLogger().info("Service " + getName() + ": publishData Key: " + key + "Value: " + value);
+		Log.getLogger().info("Service " + getName() + ": publishData Key: " + key + " Value: " + value);
 		cache.put(key, value);
 		notifyListeners(key);
 	}
