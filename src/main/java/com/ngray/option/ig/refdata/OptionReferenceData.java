@@ -29,6 +29,7 @@ public class OptionReferenceData {
 	}
 	private final String optionName;
 	private final Security underlying;
+	private final String underlyingEpic;
 	private final double strike;
 	private final LocalDate expiryDate;
 	private final EuropeanOption.Type callOrPut;
@@ -38,6 +39,7 @@ public class OptionReferenceData {
 	public OptionReferenceData(String optionName, Security underlying, double strike, LocalDate expiryDate, EuropeanOption.Type callOrPut, double dividendYield, double riskFreeRate) {
 	  this.optionName = optionName;  
 	  this.underlying = underlying;
+	  this.underlyingEpic = underlying.getIGMarket().getEpic();
 	  this.strike = strike;
 	  this.expiryDate = expiryDate;
 	  this.callOrPut = callOrPut;  
@@ -48,6 +50,18 @@ public class OptionReferenceData {
 	   */
 	  this.dividendYield = dividendYield;
 	  this.riskFreeRate = riskFreeRate;
+	}
+
+	public OptionReferenceData(String optionName, String underlyingEpic, double strike, LocalDate expiryDate,
+			EuropeanOption.Type callOrPut, double dividendYield, double riskFreeRate) {
+		  this.optionName = optionName;  
+		  this.underlying = null;;
+		  this.underlyingEpic = underlyingEpic;
+		  this.strike = strike;
+		  this.expiryDate = expiryDate;
+		  this.callOrPut = callOrPut; 
+		  this.dividendYield = dividendYield;
+		  this.riskFreeRate = riskFreeRate;
 	}
 
 	public String getOptionName() {
@@ -76,5 +90,9 @@ public class OptionReferenceData {
 
 	public double getRiskFreeRate() {
 		return riskFreeRate;
+	}
+
+	public String getUnderlyingEpic() {
+		return underlyingEpic;
 	}
 }

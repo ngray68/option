@@ -77,7 +77,8 @@ public class RiskEngine {
 		}
 		else if (args.length == 2) {
 			loginFileName = args[0];
-			refDataFileName = "/OptionReferenceData.csv";
+			// NG will load all files matching the pattern below that are resources in the classpath
+			refDataFileName = "/OptionReferenceData*.csv";
 			isLive = args[1].equals("LIVE") ? true : false;
 		}
 		

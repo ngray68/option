@@ -6,10 +6,18 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import com.ngray.option.Log;
 
@@ -73,6 +81,28 @@ public class OptionReferenceDataLoader {
 		}
 	}
 	
+	
+	public static List<Map<String,String>> loadFromResources(String filter) throws IOException, MissingReferenceDataException, URISyntaxException {
+		List<Map<String, String>> results = new ArrayList<>();
+		List<String> resources = getResourceNames(filter);
+		for (String resource : resources) {
+			results.addAll(loadFromResource(resource));
+		}
+		return results;
+	}
+	
+	private static List<String> getResourceNames(String filter) throws URISyntaxException, IOException {
+		
+		PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+		Resource[] resources = resolver.getResources(filter);
+		List<String> resourceNames = new ArrayList<>();
+		for (Resource resource : Arrays.asList(resources)) {
+			String fullPath = resource.getURI().toString();
+			resourceNames.add(fullPath.substring(fullPath.lastIndexOf("/")));
+		}
+		return resourceNames;
+	}
+
 	private static List<Map<String, String>> load(BufferedReader reader) throws IOException, MissingReferenceDataException {
 		List<Map<String, String>> results = new ArrayList<>();
 		String line = null;

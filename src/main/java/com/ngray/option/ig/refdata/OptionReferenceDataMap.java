@@ -1,11 +1,13 @@
 package com.ngray.option.ig.refdata;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 import com.ngray.option.financialinstrument.EuropeanOption.Type;
@@ -46,6 +48,7 @@ public class OptionReferenceDataMap {
 	 * @param session
 	 * @param fromResource 
 	 * @throws SessionException
+	 * @throws URISyntaxException 
 	 */
 	public static void init(String filename, Session session, boolean fromResource) throws SessionException {
 		try {
@@ -103,7 +106,8 @@ public class OptionReferenceDataMap {
 			
 			List<Map<String, String>> refDataList = null;
 			if (fromResource == true) {
-			   refDataList = OptionReferenceDataLoader.loadFromResource(filename);
+				refDataList = OptionReferenceDataLoader.loadFromResources(filename);
+				//refDataList = OptionReferenceDataLoader.loadFromResource(filename);
 			} else {
 				refDataList = OptionReferenceDataLoader.loadFromFile(filename);
 			}
@@ -125,7 +129,7 @@ public class OptionReferenceDataMap {
 						}
 					}
 					);
-		} catch (IOException | MissingReferenceDataException e) {
+		} catch (IOException | MissingReferenceDataException | URISyntaxException e) {
 			throw new SessionException(e.getMessage());
 		}
 	}
