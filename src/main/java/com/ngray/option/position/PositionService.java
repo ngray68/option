@@ -374,6 +374,14 @@ public class PositionService {
 		}
 	}
 	
+	public void removeListener(FinancialInstrument underlying, PositionListener listener) {
+		Log.getLogger().info("PositionService " + getName() + ": removing subscription for underlying security " + underlying);
+		synchronized(listenerLock) {
+			listenersByUnderlying.remove(underlying);
+			getPositions(underlying).forEach(position -> removeListener(position, listener));
+		}
+	}
+	
 	protected void notifyPnLUpdateListeners(Position position) {
 		Log.getLogger().info("PositionService " + getName() + ": notifying PnL subscriptions to " + position);
 		if (position == null) return;

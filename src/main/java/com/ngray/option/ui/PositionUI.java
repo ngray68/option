@@ -14,6 +14,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 
 import org.apache.logging.log4j.core.Layout;
 
@@ -47,6 +49,8 @@ public class PositionUI {
 	
 	public void onPositionInNewUnderlying(Position position) {
 		createPositionTable(position.getUnderlying());
+		parentFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		parentFrame.pack();
 	}
 	
 	private void initialize() {
@@ -69,6 +73,44 @@ public class PositionUI {
 		frame.setClosable(true);
 		frame.setIconifiable(true);
 		frame.pack();
+		frame.addInternalFrameListener(new InternalFrameListener() {
+
+			@Override
+			public void internalFrameOpened(InternalFrameEvent e) {
+				// unimplemented
+			}
+
+			@Override
+			public void internalFrameClosing(InternalFrameEvent e) {
+				// unimplemented
+			}
+
+			@Override
+			public void internalFrameClosed(InternalFrameEvent e) {
+				positionService.removeListener(underlying, model);
+			}
+
+			@Override
+			public void internalFrameIconified(InternalFrameEvent e) {
+				// unimplemented				
+			}
+
+			@Override
+			public void internalFrameDeiconified(InternalFrameEvent e) {
+				// unimplemented
+			}
+
+			@Override
+			public void internalFrameActivated(InternalFrameEvent e) {
+				// unimplemented
+			}
+
+			@Override
+			public void internalFrameDeactivated(InternalFrameEvent e) {
+				// unimplemented
+			}		
+		});
+	
 		show(frame);
 		desktopPane.add(frame);
 		positionService.addListener(underlying, model);
