@@ -197,18 +197,18 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			newData[newRow][VEGA_COL] = risk.getVega();
 			newData[newRow][THETA_COL] = risk.getTheta();
 			newData[newRow][RHO_COL] = risk.getRho();
+			data = newData;
 			
 			double[] newRisk = calculateTotalRisk();
-			newData[newData.length - 1][ID_COL] = "Total";
-			newData[newData.length - 1][DELTA_COL] = newRisk[0];
-			newData[newData.length - 1][GAMMA_COL] = newRisk[1];
-			newData[newData.length - 1][VEGA_COL] = newRisk[2];
-			newData[newData.length - 1][THETA_COL] = newRisk[3];
-			newData[newData.length - 1][RHO_COL] = newRisk[4];
-			newData[newData.length - 1][PNL_COL] = calculateTotalPnL();	
+			data[data.length - 1][ID_COL] = "Total";
+			data[data.length - 1][DELTA_COL] = newRisk[0];
+			data[data.length - 1][GAMMA_COL] = newRisk[1];
+			data[data.length - 1][VEGA_COL] = newRisk[2];
+			data[data.length - 1][THETA_COL] = newRisk[3];
+			data[data.length - 1][RHO_COL] = newRisk[4];
+			data[data.length - 1][PNL_COL] = calculateTotalPnL();	
 			
-			positions.put(position, newRow);
-			data = newData;
+			positions.put(position, newRow);	
 			fireTableDataChanged();
 		}		
 	}
