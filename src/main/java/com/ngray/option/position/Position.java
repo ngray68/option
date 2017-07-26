@@ -1,6 +1,7 @@
 package com.ngray.option.position;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +39,8 @@ public class Position {
 	
 	private final IGPosition igPosition;
 	
+	private LocalTime timestamp;
+	
 	/**
 	 * Construct a position object from the supplied IGPosition
 	 * @param igPosition
@@ -58,6 +61,8 @@ public class Position {
 		// initialize PnL and risk
 		initializePnL();
 		initializeRisk();
+		
+		this.timestamp = LocalTime.now();
 	}
 	
 	
@@ -78,6 +83,7 @@ public class Position {
 		// initialize PnL and risk to NaN
 		this.positionPnL = Double.NaN;
 		this.positionRisk = new Risk();
+		this.timestamp = LocalTime.now();
 	}
 	
 	private void initializeRisk() {
@@ -130,6 +136,7 @@ public class Position {
 		Log.getLogger().info("Position: " + getId() + " updating risk...");
 		positionRisk = riskOnPositionOfSizeOne.multiply(getPositionSize());
 		Log.getLogger().debug(positionRisk);
+		setTimestamp(LocalTime.now());
 	}
 	
 	/**
@@ -154,6 +161,7 @@ public class Position {
 		
 		positionPnL = (latest - getOpen()) * getPositionSize();
 		Log.getLogger().debug(getPositionDetails());
+		setTimestamp(LocalTime.now());
 	}
 	
 	@Override
@@ -218,6 +226,7 @@ public class Position {
 		this.positionSize = positionSize;	
 		positionRisk = positionRisk.multiply(Math.abs(positionSize/prevPositionSize));
 		positionPnL = positionPnL * Math.abs(positionSize/prevPositionSize);
+		setTimestamp(LocalTime.now());
 	}
 	
 	
@@ -260,6 +269,16 @@ public class Position {
 
 	public double getUnderlyingLatest() {
 		return positionRisk.getUnderlyingPrice();
+	}
+
+
+	public LocalTime getTimestamp() {
+		return timestamp;
+	}
+
+
+	public void setTimestamp(LocalTime timestamp) {
+		this.timestamp = timestamp;
 	}
 
 	

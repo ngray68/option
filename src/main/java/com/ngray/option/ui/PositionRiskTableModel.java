@@ -17,7 +17,7 @@ import com.ngray.option.risk.Risk;
 public class PositionRiskTableModel extends AbstractTableModel implements PositionListener {
 
 	private String[] columns = {
-			"Id",
+			"LastUpdated",
 			"Security",
 			"Expiry",
 			"Size",
@@ -33,7 +33,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			"Rho"
 	};
 	
-	private static final int ID_COL = 0;
+	private static final int LASTUPDATED_COL = 0;
 	private static final int SEC_COL = 1;
 	private static final int EXPIRY_COL = 2;
 	private static final int SIZE_COL = 3;
@@ -67,7 +67,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			Position pos = positions.get(i);
 			this.positions.put(pos, i);
 			Risk risk = pos.getPositionRisk();
-			data[i][ID_COL] = pos.getId();
+			data[i][LASTUPDATED_COL] = pos.getTimestamp();
 			data[i][SEC_COL] = pos.getInstrument().getName();
 			data[i][EXPIRY_COL] = pos.getInstrument().getIGMarket().getExpiry();
 			data[i][SIZE_COL] = pos.getPositionSize();
@@ -90,7 +90,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			sumRho += risk.getRho();
 		}
 		
-		data[data.length -1][ID_COL] = "Total";
+		data[data.length -1][LASTUPDATED_COL] = "Total";
 		data[data.length - 1][PNL_COL] = sumPnL;
 		data[data.length - 1][DELTA_COL] = sumDelta;
 		data[data.length - 1][GAMMA_COL] = sumGamma;
@@ -108,6 +108,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			double oldPnL = (double)data[rowIndex][PNL_COL];
 			double newPnL = position.getPositionPnL();
 			
+			data[rowIndex][LASTUPDATED_COL] = position.getTimestamp();
 			data[rowIndex][LATEST_COL] = position.getLatest();
 			data[rowIndex][PNL_COL] = position.getPositionPnL();
 			double updatedPnL = (double)data[data.length - 1][PNL_COL] - oldPnL + newPnL;
@@ -117,6 +118,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 		
 			data[data.length - 1][PNL_COL] = updatedPnL;	
 	
+			fireTableCellUpdated(rowIndex, LASTUPDATED_COL);
 			fireTableCellUpdated(rowIndex, LATEST_COL);
 			fireTableCellUpdated(rowIndex, PNL_COL);
 			fireTableCellUpdated(data.length - 1, PNL_COL);
@@ -149,6 +151,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 		synchronized(lock) {
 			int rowIndex = positions.get(position);
 			Risk risk = position.getPositionRisk();
+			data[rowIndex][LASTUPDATED_COL] = position.getTimestamp();
 			data[rowIndex][UNDERLYING_LATEST_COL] = risk.getUnderlyingPrice();
 			data[rowIndex][IV_COL] = risk.getImpliedVolatility();
 			data[rowIndex][DELTA_COL] = risk.getDelta();
@@ -183,7 +186,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			Risk risk = position.getPositionRisk();
 			int newRow = newData.length - 2;
 			
-			newData[newRow][ID_COL] = position.getId();
+			newData[newRow][LASTUPDATED_COL] = position.getTimestamp();
 			newData[newRow][SEC_COL] = position.getInstrument().getName();
 			newData[newRow][EXPIRY_COL] = position.getInstrument().getIGMarket().getExpiry();
 			newData[newRow][SIZE_COL] = position.getPositionSize();
@@ -200,7 +203,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			data = newData;
 			
 			double[] newRisk = calculateTotalRisk();
-			data[data.length - 1][ID_COL] = "Total";
+			data[data.length - 1][LASTUPDATED_COL] = "Total";
 			data[data.length - 1][DELTA_COL] = newRisk[0];
 			data[data.length - 1][GAMMA_COL] = newRisk[1];
 			data[data.length - 1][VEGA_COL] = newRisk[2];
@@ -233,7 +236,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			positions = newPositions;
 			data = newData;
 			double[] newRisk = calculateTotalRisk();
-			data[data.length - 1][ID_COL] = "Total";
+			data[data.length - 1][LASTUPDATED_COL] = "Total";
 			data[data.length - 1][DELTA_COL] = newRisk[0];
 			data[data.length - 1][GAMMA_COL] = newRisk[1];
 			data[data.length - 1][VEGA_COL] = newRisk[2];
@@ -274,7 +277,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 			NumberFormat formatter = null;
 			if (rowIndex != data.length - 1) {
 				switch (columnIndex) {
-					case ID_COL:
+					case LASTUPDATED_COL:
 					case SEC_COL:
 					case EXPIRY_COL:
 						return data[rowIndex][columnIndex];
