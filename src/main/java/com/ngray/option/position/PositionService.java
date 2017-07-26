@@ -32,6 +32,7 @@ import com.ngray.option.risk.RiskListener;
 import com.ngray.option.risk.RiskService;
 import com.ngray.option.service.ServiceListener;
 import com.ngray.option.ui.PositionRiskTableModel;
+import com.ngray.option.ui.PositionUI;
 
 public class PositionService {
 	
@@ -62,6 +63,8 @@ public class PositionService {
 	// need a separate lock here as we need to synchronize non-atomic operations
 	private final Object marketDataListenerLock = new Object();
 	private final Map<Position, Map<FinancialInstrument, MarketDataListener>> marketDataListeners;
+
+	private PositionUI positionUI;
 	
 	public PositionService(String name, Session session, RiskService riskService, MarketDataService marketDataService, PositionUpdateService positionUpdateService) {
 		Log.getLogger().info("Creating PositionService " + name);
@@ -212,35 +215,15 @@ public class PositionService {
 			PositionListener positionListener = getListener(newPosition.getUnderlying());
 			if (positionListener != null) {
 				addListener(newPosition, positionListener);
+				notifyOpenPositionListeners(newPosition);
 			} else {
-				/*	this doesn't work properly	- postpone to next check-in
-				// create a new JFrame to show the new position and add it as a listener to this service
-				// TODO - refactor this and the equivalent code in risk engine
-				List<Position> newPositions = new ArrayList<>();
-				newPositions.add(newPosition);
-				PositionRiskTableModel model = new PositionRiskTableModel(newPositions);
-				JTable table = new JTable(model);
-				JScrollPane pane = new JScrollPane(table);
-				JFrame frame = new JFrame();
-				frame.add(pane);
-				frame.pack();
-				frame.setTitle(newPosition.getUnderlying().getName());
-				
-				EventQueue.invokeLater(()-> {
-					try {
-						frame.setVisible(true);
-					} catch (HeadlessException e) {
-						Log.getLogger().error(e.getMessage(), e);
-					}
-				});
-				
-				addListener(newPosition.getUnderlying(), model);
-				*/
+				getUI().onPositionInNewUnderlying(newPosition);	
+				// NG we mustn't separately notify open position listeners as this will result in a double entry in
+				// the UI. Think about how to make this more robust
 			}
 			
 			subscribeToMarketDataService(newPosition, marketDataService);
 			subscribeToRiskService(newPosition, riskService);	
-			notifyOpenPositionListeners(newPosition);
 		} catch (MissingReferenceDataException | SessionException e) {
 			Log.getLogger().error("PositionService " + getName() + ": create position failed for dealId " + positionUpdate.getDealId(), e);
 		}		
@@ -505,5 +488,13 @@ public class PositionService {
 
 	public PositionUpdateService getPositionUpdateService() {
 		return positionUpdateService;
+	}
+
+	public void setUI(PositionUI positionUI) {
+		this.positionUI = positionUI;
+	}
+	
+	public PositionUI getUI() {
+		return positionUI;
 	}
 }

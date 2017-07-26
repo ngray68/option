@@ -24,6 +24,7 @@ import com.ngray.option.position.PositionService;
 import com.ngray.option.position.PositionUpdateService;
 import com.ngray.option.risk.RiskService;
 import com.ngray.option.ui.PositionRiskTableModel;
+import com.ngray.option.ui.PositionUI;
 
 /**
  * This class provides the entry-point for the live risk engine program.
@@ -103,38 +104,13 @@ public class RiskEngine {
 			StreamManager streamManager = new StreamManager(lightStreamerEndpoint, activeAccountId, cst, xst);
 			marketDataService = new MarketDataService("MarketData-LIVE", streamManager.getLivePriceStream());
 			positionUpdateService = new PositionUpdateService("PositionUpdate-LIVE", streamManager.getPositionUpdateStream());
-			//livePriceStream = new LivePriceStream(lightStreamerEndpoint, activeAccountId, cst, xst);
-			//marketDataService = new MarketDataService("LIVE", livePriceStream);
 			riskService = new RiskService("LIVE", marketDataService, LocalDate.now());
 			
 			positionService = new PositionService("LIVE", session, riskService, marketDataService, positionUpdateService);
 			positionService.initialize();
-			//positionService.subscribeAllToMarketDataService(marketDataService);
-			//positionService.subscribeAllToRiskService(riskService);
-			//positionService.subscribeToPositionUpdateService(positionUpdateService);
-		
-			Set<FinancialInstrument> underlyings = positionService.getUnderlyings();			
-			underlyings.forEach(underlying -> {
-				PositionRiskTableModel model = new PositionRiskTableModel(positionService.getPositions(underlying));
-				JTable table = new JTable(model);
-				JScrollPane pane = new JScrollPane(table);
-				JFrame frame = new JFrame();
-				frame.add(pane);
-				frame.pack();
-				frame.setTitle(underlying.getName());
-				
-				EventQueue.invokeLater(()-> {
-					try {
-						frame.setVisible(true);
-					} catch (HeadlessException e) {
-						Log.getLogger().error(e.getMessage(), e);
-					}
-				});
-				
-				positionService.addListener(underlying, model);
-				//positionService.getPositions(underlying).forEach(position->positionService.addListener(position, model));
-			});
-		
+			
+			PositionUI positionUI = new PositionUI(positionService);
+			
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 
 				@Override
