@@ -1,35 +1,51 @@
 package com.ngray.option.ui;
 
 import java.awt.EventQueue;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
-import java.awt.LayoutManager;
 import java.util.Set;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
-
-import org.apache.logging.log4j.core.Layout;
 
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.position.Position;
 import com.ngray.option.position.PositionService;
 
+/**
+ * This class manages the windows which show risk on option/underlying positions
+ * grouped by underlying security
+ * @author nigelgray
+ *
+ */
 public class PositionUI {
 
+	/**
+	 * The position service from which the UI groups positions
+	 */
 	private final PositionService positionService;
+	
+	/**
+	 * The parent JFrame of the UI
+	 */
 	private final JFrame parentFrame;
+	
+	/**
+	 * The desktop pane which contains the internal windows
+	 * showing risk by underlying
+	 */
 	private final JDesktopPane desktopPane;
 	
+	/**
+	 * Constructor
+	 * @param positionService
+	 */
 	public PositionUI(PositionService positionService) {
 		this.positionService = positionService;
 		this.parentFrame = new JFrame();
@@ -42,15 +58,15 @@ public class PositionUI {
 		show(parentFrame);
 		this.positionService.setUI(this);
 	}
-
-	public PositionService getPositionService() {
-		return positionService;
-	}
 	
+	/**
+	 * Callback to update the UI when a position in a new underlying is created
+	 * @param position
+	 */
 	public void onPositionInNewUnderlying(Position position) {
+		
+		//TODO: check that a model/JInternalFrame for the underlying doesn't already exist
 		createPositionTable(position.getUnderlying());
-		parentFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		parentFrame.pack();
 	}
 	
 	private void initialize() {
@@ -135,9 +151,4 @@ public class PositionUI {
 			}
 		});
 	}
-
-	public JFrame getParentFrame() {
-		return parentFrame;
-	}
-
 }

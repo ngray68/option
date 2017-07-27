@@ -119,6 +119,14 @@ public class OptionReferenceDataMap {
 					 if (subNode.getName().equals(nextToken)) {
 						 subNode.getSubNodesAndMarkets(session);
 						 node = subNode;
+						 // this is just to make sure we don't breach the request limits
+						 // unfortunately it makes initialization quite slow
+						 try {
+							Thread.sleep(2000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						 break;
 					 }
 				}
