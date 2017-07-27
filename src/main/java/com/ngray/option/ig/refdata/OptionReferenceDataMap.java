@@ -3,11 +3,12 @@ package com.ngray.option.ig.refdata;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 import com.ngray.option.financialinstrument.EuropeanOption.Type;
@@ -19,8 +20,6 @@ import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.market.Market;
 import com.ngray.option.ig.market.MarketNode;
 import com.ngray.option.ig.refdata.OptionReferenceData.Attribute;
-import com.ngray.option.ig.rest.RestAPIGet;
-import com.ngray.option.ig.rest.RestAPIResponse;
 
 public class OptionReferenceDataMap {
 	
@@ -28,6 +27,11 @@ public class OptionReferenceDataMap {
 	 * Map option instrumentName to static reference data
 	 */
 	private final static Map<String, OptionReferenceData> referenceData = new HashMap<>();
+	
+	/**
+	 * Map underlying to list of option reference data
+	 */
+	private final static Map<Security, List<OptionReferenceData>> referenceDataByUnderlying = new HashMap<>();;
 	
 	/**
 	 * Retrieve the ref data for the specified option. Will return null if not present
@@ -39,6 +43,27 @@ public class OptionReferenceDataMap {
 			throw new MissingReferenceDataException("No reference data for " + optionName);
 		}
 		return referenceData.get(optionName);
+	}
+	
+	/**
+	 * Get all the underlyings for which we have option reference data
+	 * @return
+	 */
+	public static List<Security> getUnderlyings() {
+		return new ArrayList<>(referenceDataByUnderlying.keySet());			
+	}
+	
+	/**
+	 * Get all option reference data relating to the specified underlying
+	 * @param underlying
+	 * @return
+	 */
+	public static List<OptionReferenceData> getOptionReferenceData(Security underlying) {
+		if (!referenceDataByUnderlying.containsKey(underlying)) {
+			return Collections.emptyList();
+		}
+		
+		return referenceDataByUnderlying.get(underlying);
 	}
 	
 	/**
@@ -83,6 +108,12 @@ public class OptionReferenceDataMap {
 							OptionReferenceData data = 
 									new OptionReferenceData(entry.get(Attribute.OptionEpic.toString()), underlying, strike, expiry, callOrPut, dividendYield, riskFreeRate);
 							referenceData.put(entry.get(Attribute.OptionEpic.toString()), data);
+							
+							if (!referenceDataByUnderlying.containsKey(underlyingMarket)) {
+								referenceDataByUnderlying.put(underlying, new ArrayList<>());
+							}
+							
+							referenceDataByUnderlying.get(underlying).add(data);
 						} else {
 							Log.getLogger().info(underlyings.get(entry.get(Attribute.UnderlyingEpic.toString())) + " doesn't exist (eg. expired) - ignoring all options with this underlying"); 
 						}

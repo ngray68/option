@@ -32,7 +32,8 @@ import com.ngray.option.risk.RiskListener;
 import com.ngray.option.risk.RiskService;
 import com.ngray.option.service.ServiceListener;
 import com.ngray.option.ui.PositionRiskTableModel;
-import com.ngray.option.ui.PositionUI;
+import com.ngray.option.ui.PositionRiskView;
+
 
 public class PositionService {
 	
@@ -64,7 +65,7 @@ public class PositionService {
 	private final Object marketDataListenerLock = new Object();
 	private final Map<Position, Map<FinancialInstrument, MarketDataListener>> marketDataListeners;
 
-	private PositionUI positionUI;
+	private PositionRiskView positionRiskView;
 	
 	public PositionService(String name, Session session, RiskService riskService, MarketDataService marketDataService, PositionUpdateService positionUpdateService) {
 		Log.getLogger().info("Creating PositionService " + name);
@@ -217,7 +218,9 @@ public class PositionService {
 				addListener(newPosition, positionListener);
 				notifyOpenPositionListeners(newPosition);
 			} else {
-				getUI().onPositionInNewUnderlying(newPosition);	
+				if (getView() != null) {
+					getView().onPositionInNewUnderlying(newPosition);
+				}
 				// NG we mustn't separately notify open position listeners as this will result in a double entry in
 				// the UI. Think about how to make this more robust
 			}
@@ -498,11 +501,12 @@ public class PositionService {
 		return positionUpdateService;
 	}
 
-	public void setUI(PositionUI positionUI) {
-		this.positionUI = positionUI;
+	public PositionRiskView getView() {
+		return positionRiskView;
 	}
-	
-	public PositionUI getUI() {
-		return positionUI;
+
+	public void setView(PositionRiskView positionRiskView) {
+		this.positionRiskView = positionRiskView;
+		
 	}
 }

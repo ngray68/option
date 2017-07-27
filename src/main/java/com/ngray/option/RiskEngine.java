@@ -1,30 +1,19 @@
 package com.ngray.option;
 
-import java.awt.EventQueue;
-import java.awt.HeadlessException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Set;
-
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-
-import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
-import com.ngray.option.ig.stream.LivePriceStream;
 import com.ngray.option.ig.stream.StreamManager;
 import com.ngray.option.marketdata.MarketDataService;
 import com.ngray.option.position.PositionService;
 import com.ngray.option.position.PositionUpdateService;
 import com.ngray.option.risk.RiskService;
-import com.ngray.option.ui.PositionRiskTableModel;
-import com.ngray.option.ui.PositionUI;
+import com.ngray.option.ui.MainUI;
 
 /**
  * This class provides the entry-point for the live risk engine program.
@@ -34,7 +23,6 @@ import com.ngray.option.ui.PositionUI;
 public class RiskEngine {
 	
 	private static Session session = null;
-	private static LivePriceStream livePriceStream = null;
 	private static MarketDataService marketDataService = null;
 	private static RiskService riskService = null;
 	private static PositionService positionService = null;
@@ -109,8 +97,7 @@ public class RiskEngine {
 			positionService = new PositionService("LIVE", session, riskService, marketDataService, positionUpdateService);
 			positionService.initialize();
 			
-			PositionUI positionUI = new PositionUI(positionService);
-			
+			new MainUI().show();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 
 				@Override
@@ -140,5 +127,13 @@ public class RiskEngine {
 		} catch (SessionException e) {
 			Log.getLogger().error("Error logging out of IG Session during shutdown", e);
 		}
+	}
+
+	/**
+	 * Get teh position service
+	 * @return
+	 */
+	public static PositionService getPositionService() {
+		return positionService;
 	}
 }
