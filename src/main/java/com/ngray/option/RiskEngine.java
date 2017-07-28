@@ -130,10 +130,19 @@ public class RiskEngine {
 	}
 
 	/**
-	 * Get teh position service
+	 * Get the position service
 	 * @return
 	 */
 	public static PositionService getPositionService() {
 		return positionService;
+	}
+
+	/**
+	 * Get the market data service
+	 * @return
+	 */
+	public static MarketDataService getMarketDataService() {
+		// TODO Auto-generated method stub
+		return marketDataService;
 	}
 }

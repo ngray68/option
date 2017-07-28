@@ -4,7 +4,7 @@ import com.ngray.option.ig.market.Market;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.model.Model;
 
-public abstract class FinancialInstrument {
+public abstract class FinancialInstrument implements Comparable<FinancialInstrument> {
 
 	private Market igMarket;
 	
@@ -71,5 +71,10 @@ public abstract class FinancialInstrument {
 	 * @return
 	 */
 	public abstract FinancialInstrument getUnderlying();
+
+	@Override
+	public int compareTo(FinancialInstrument rhs) {
+		return identifier.compareTo(rhs.getIdentifier());
+	}
 	
 }

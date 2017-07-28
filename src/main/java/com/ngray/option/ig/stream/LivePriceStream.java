@@ -37,13 +37,17 @@ public class LivePriceStream implements ServiceDataSource<FinancialInstrument, M
 			return;
 		}
 		
+		String[] group = new String[1];
 		Market market = instrument.getIGMarket();
 		if (market == null) {
-			Log.getLogger().error("LivePriceStream::addSubscription - the instrument for which the subscription is being added has no IG market information - ignored");
-			return;
+			Log.getLogger().warn("LivePriceStream::addSubscription - the instrument for which the subscription is being added has no IG market information");
+			Log.getLogger().warn("LivePriceStream::addSubscription - using instrument ID to subscribe, this will only work if the ID is identical the IG epic");
+			group[0] = MARKET_PATTERN.replace("{epic}", instrument.getIdentifier());
+		}	
+		else {
+			group[0] = MARKET_PATTERN.replace("{epic}", market.getEpic());
 		}
 		
-		String[] group = { MARKET_PATTERN.replace("{epic}", market.getEpic()) };
 		Subscription subs = new Subscription("MERGE", group, MARKET_FIELDS);
 		SubscriptionListener subsListener = new SubscriptionListener() {
 
