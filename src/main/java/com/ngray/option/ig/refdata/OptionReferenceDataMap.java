@@ -109,7 +109,7 @@ public class OptionReferenceDataMap {
 									new OptionReferenceData(entry.get(Attribute.OptionEpic.toString()), underlying, strike, expiry, callOrPut, dividendYield, riskFreeRate);
 							referenceData.put(entry.get(Attribute.OptionEpic.toString()), data);
 							
-							if (!referenceDataByUnderlying.containsKey(underlyingMarket)) {
+							if (!referenceDataByUnderlying.containsKey(underlying)) {
 								referenceDataByUnderlying.put(underlying, new ArrayList<>());
 							}
 							

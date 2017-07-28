@@ -1,7 +1,5 @@
 package com.ngray.option.position;
 
-import java.awt.EventQueue;
-import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,10 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.EuropeanOption;
@@ -31,7 +25,6 @@ import com.ngray.option.risk.Risk;
 import com.ngray.option.risk.RiskListener;
 import com.ngray.option.risk.RiskService;
 import com.ngray.option.service.ServiceListener;
-import com.ngray.option.ui.PositionRiskTableModel;
 import com.ngray.option.ui.PositionRiskView;
 
 

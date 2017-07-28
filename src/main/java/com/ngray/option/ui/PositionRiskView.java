@@ -8,7 +8,10 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
 import java.util.Set;
 
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.event.InternalFrameEvent;
@@ -46,15 +49,29 @@ public class PositionRiskView {
 	public void showPositions() {
 		Log.getLogger().debug("Showing open positions");
 		RiskEngine.getPositionService().setView(this);
-		parentUI.setFrameTitle("Open Positions");
+		
 		parentUI.setLayout(new GridLayout(0,1));
-		createPositionTables();
+		if (createPositionTables() == 0) {
+			Log.getLogger().debug("No open positions");
+			JDialog noPositions = new JDialog(parentUI.getParentFrame());
+			noPositions.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
+			noPositions.setLayout(new GridLayout(0,1));
+			JButton ok = new JButton("OK");
+			ok.addActionListener(event -> noPositions.dispose());
+			noPositions.add(new JLabel("You have no open positions at present"));
+			noPositions.add(ok);
+			noPositions.pack();
+			noPositions.setVisible(true);
+			return;
+		}
+		
 		parentUI.getParentFrame().addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				hidePositions();
 			}
 		});
+		parentUI.setFrameTitle("Open Positions");
 	}
 	
 	/**
@@ -86,13 +103,15 @@ public class PositionRiskView {
 	
 	/**
 	 * Create position windows for each underlying on initialization
+	 * @return the number of position tables created
 	 */
-	private void createPositionTables() {
+	private int createPositionTables() {
 		Log.getLogger().debug("Creating position tables...");
 		Set<FinancialInstrument> underlyings = RiskEngine.getPositionService().getUnderlyings();			
 		underlyings.forEach(underlying -> {
 			createPositionTable(underlying);
 		});
+		return underlyings.size();
 	}
 	
 	/**
