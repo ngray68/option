@@ -105,6 +105,6 @@ public class MainUI {
 	}
 		
 	private void showOptionLadderDialog() {
-		new OptionLadderDialog(this);
+		new OptionLadderDialog(this).show();
 	}
 }

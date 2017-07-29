@@ -53,6 +53,11 @@
   		<artifactId>spring-core</artifactId>
   		<version>4.3.8.RELEASE</version>
   	</dependency>
+  	<dependency>
+  		<groupId>com.miglayout</groupId>
+  		<artifactId>miglayout</artifactId>
+  		<version>3.7.4</version>
+  	</dependency>
   </dependencies>
   <repositories>
     <repository>

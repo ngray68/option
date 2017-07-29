@@ -69,6 +69,7 @@ public class PositionRiskView {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				hidePositions();
+				parentUI.getParentFrame().removeWindowListener(this);
 			}
 		});
 		parentUI.setFrameTitle("Open Positions");

@@ -3,6 +3,9 @@ package com.ngray.option.ui;
 import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyVetoException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,6 +72,14 @@ public class OptionRiskLadderView {
 		parentUI.setFrameTitle("Option Risk Ladder");	
 		parentUI.getDesktopPane().add(callFrame);
 		parentUI.getDesktopPane().add(putFrame);
+		
+		parentUI.getParentFrame().addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				onClose();
+				parentUI.getParentFrame().removeWindowListener(this);
+			}
+		});
 	}
 	
 	private JInternalFrame createFrame(String title, JScrollPane pane) {
@@ -81,6 +92,20 @@ public class OptionRiskLadderView {
 		frame.setIconifiable(true);
 		frame.pack();
 		return frame;
+	}
+	
+	private void onClose() {
+		Log.getLogger().debug("Closing option risk ladder view....");
+		for (JInternalFrame frame : parentUI.getDesktopPane().getAllFrames()) {
+			try {
+				frame.setClosed(true);
+			} catch (PropertyVetoException e) {
+				Log.getLogger().warn(e.getMessage(), true);
+			}
+		}
+		
+		parentUI.setFrameTitle("");
+		parentUI.show();
 	}
 	
 	/**
