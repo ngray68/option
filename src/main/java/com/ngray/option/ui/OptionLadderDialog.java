@@ -1,9 +1,10 @@
 package com.ngray.option.ui;
 
+import java.awt.EventQueue;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -15,14 +16,10 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextPane;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.EuropeanOption;
-import com.ngray.option.financialinstrument.EuropeanOption.Type;
 import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.refdata.OptionReferenceData;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
@@ -36,6 +33,8 @@ public class OptionLadderDialog {
 	private JScrollPane strikes;
 	private StrikeSelectionTableModel strikeSelectionTableModel;
 	private JComboBox<LocalDate> expiry;
+	private JButton ok;
+	private JButton cancel;
 	
 	private Security underlyingSelected;
 	private Set<Double> strikesSelected;
@@ -51,24 +50,58 @@ public class OptionLadderDialog {
 		strikesSelected = new TreeSet<>();
 		expirySelected = null;
 		
+		createComponents();
+		addListeners();	
+	}
+	
+	private void createComponents() {
+		
 		dialog = new JDialog(parentUI.getParentFrame(), "Option Ladder");
 		dialog.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
+		dialog.setLayout(new GridLayout(0,2));
 		
+		JLabel underlyingLabel = new JLabel("Underlying: ");	
 		underlyings = new JComboBox<>();
-		expiry = new JComboBox<>();
-		
-		JButton ok = new JButton("OK");
-		JButton cancel = new JButton("Cancel");
-		
-		strikeSelectionTableModel = new StrikeSelectionTableModel();
-		JTable strikeSelectionTable = new JTable(strikeSelectionTableModel);
-		strikes = new JScrollPane(strikeSelectionTable);
-		
 		underlyings.addItem(new SecurityAdapter());
 		OptionReferenceDataMap.getUnderlyings().forEach(
 				(underlying) -> underlyings.addItem(new SecurityAdapter(underlying))
 			);
 		
+		
+		JLabel strikesLabel = new JLabel("Strikes: ");
+		strikeSelectionTableModel = new StrikeSelectionTableModel();
+		JTable strikeSelectionTable = new JTable(strikeSelectionTableModel);
+		strikes = new JScrollPane(strikeSelectionTable);
+		
+		JLabel expiryLabel = new JLabel("Expiry: ");
+		expiry = new JComboBox<>();
+		ok = new JButton("OK");
+		cancel = new JButton("Cancel");
+		
+		dialog.add(underlyingLabel);
+		dialog.add(underlyings);
+		dialog.add(strikesLabel);
+		dialog.add(strikes);
+		dialog.add(expiryLabel);
+		dialog.add(expiry);
+		dialog.add(ok);
+		dialog.add(cancel);
+		dialog.pack();
+		show(dialog);
+		
+	}
+	
+	private void show(JDialog dialog) {
+		EventQueue.invokeLater(()-> {
+			try {
+				dialog.setVisible(true);
+			} catch (HeadlessException e) {
+				Log.getLogger().error(e.getMessage(), e);
+			}
+		});
+	}
+
+	private void addListeners() {
 		underlyings.addActionListener(
 				(event) -> { 
 					Security selectedUnderlying = underlyings.getItemAt(underlyings.getSelectedIndex()).getSecurity();
@@ -76,7 +109,7 @@ public class OptionLadderDialog {
 					}
 				);
 		
-		strikeSelectionTable.getModel().addTableModelListener(
+		strikeSelectionTableModel.addTableModelListener(
 				(event) -> { 
 						int row = event.getFirstRow();
 					    int column = event.getColumn();
@@ -97,23 +130,7 @@ public class OptionLadderDialog {
 				);
 		
 		ok.addActionListener(event -> onOK());
-		cancel.addActionListener(event -> onCancel());
-		
-		
-		dialog.setLayout(new GridLayout(0,2));
-		dialog.add(new JLabel("Unfinished"));
-		dialog.add(new JLabel(""));
-		dialog.add(new JLabel("Underlying: "));
-		dialog.add(underlyings);
-		dialog.add(new JLabel("Strikes:"));
-		dialog.add(strikes);
-		dialog.add(new JLabel("Expiry: "));
-		dialog.add(expiry);
-		dialog.add(ok);
-		dialog.add(cancel);
-		
-		dialog.pack();
-		dialog.setVisible(true);	
+		cancel.addActionListener(event -> onCancel());		
 	}
 	
 	private void onUnderlyingSelected(Security underlying) {
