@@ -13,12 +13,20 @@ import java.util.stream.Collectors;
 import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
+
 import com.ngray.option.Log;
 import com.ngray.option.analysis.OptionRiskLadder;
 import com.ngray.option.financialinstrument.EuropeanOption;
 import com.ngray.option.financialinstrument.EuropeanOption.Type;
 import com.ngray.option.financialinstrument.Security;
 
+/**
+ * Class encapsulating the UI components for viewing option risk ladders
+ * @author nigelgray
+ *
+ */
 public class OptionRiskLadderView {
 	
 	private final MainUI parentUI;
@@ -28,6 +36,13 @@ public class OptionRiskLadderView {
 	private Security underlying;
 	private LocalDate optionExpiry;
 	
+	/**
+	 * Constructor
+	 * @param parentUI
+	 * @param underlying
+	 * @param optionExpiry
+	 * @param options
+	 */
 	public OptionRiskLadderView(MainUI parentUI, Security underlying, LocalDate optionExpiry, List<EuropeanOption> options) {
 		Log.getLogger().debug("Constructing OptionRiskLadderView");
 		this.parentUI = parentUI;
@@ -51,22 +66,12 @@ public class OptionRiskLadderView {
 		putRiskLadder = new OptionRiskLadder(puts);
 	}
 	
-	private void createRiskTables() {
-		
-		OptionRiskLadderTableModel callModel = new OptionRiskLadderTableModel(callRiskLadder);
-		OptionRiskLadderTableModel putModel = new OptionRiskLadderTableModel(putRiskLadder);
-		
-		JTable callTable = new JTable(callModel);
-		JTable putTable = new JTable(putModel);
-		
-		JScrollPane callPane = new JScrollPane(callTable);
-		JScrollPane putPane = new JScrollPane(putTable);
-		
+	private void createRiskTables() {		
 		parentUI.setLayout(new GridLayout(1,2));
 		
 		String underlyingName = underlying.getName() + " " + underlying.getIGMarket().getExpiry();
-		JInternalFrame callFrame = createFrame(underlyingName + " CALLS Expiring " + optionExpiry, callPane);
-		JInternalFrame putFrame = createFrame(underlyingName + " PUTS Expiring " + optionExpiry, putPane);
+		JInternalFrame callFrame = createFrame(underlyingName + " CALLS Expiring " + optionExpiry, callRiskLadder);
+		JInternalFrame putFrame = createFrame(underlyingName + " PUTS Expiring " + optionExpiry, putRiskLadder);
 		show(callFrame);
 		show(putFrame);
 		parentUI.setFrameTitle("Option Risk Ladder");	
@@ -82,7 +87,11 @@ public class OptionRiskLadderView {
 		});
 	}
 	
-	private JInternalFrame createFrame(String title, JScrollPane pane) {
+	private JInternalFrame createFrame(String title, OptionRiskLadder riskLadder) {
+		OptionRiskLadderTableModel model = new OptionRiskLadderTableModel(riskLadder);
+		JTable table = new JTable(model);
+		JScrollPane pane = new JScrollPane(table);
+		
 		JInternalFrame frame = new JInternalFrame();
 		frame.add(pane);
 		frame.setTitle(title);
@@ -91,6 +100,13 @@ public class OptionRiskLadderView {
 		frame.setClosable(true);
 		frame.setIconifiable(true);
 		frame.pack();
+		frame.addInternalFrameListener(new InternalFrameAdapter() {
+			@Override
+			public void internalFrameClosed(InternalFrameEvent e) {
+				Log.getLogger().debug("OptionRiskLadderView::InternalFrame close event received");
+				riskLadder.dispose();
+			}
+		});
 		return frame;
 	}
 	
@@ -107,7 +123,7 @@ public class OptionRiskLadderView {
 		parentUI.setFrameTitle("");
 		parentUI.show();
 	}
-	
+		
 	/**
 	 * Show the JInternalFrame
 	 * @param frame

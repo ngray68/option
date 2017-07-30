@@ -37,7 +37,12 @@ public class OptionRiskLadder implements RiskListener {
 	private final Object listenerLock = new Object();
 	private final List<RiskListener> listeners = new ArrayList<>();
 	
+	/**
+	 * Construct a risk ladder for the supplied list of options
+	 * @param options
+	 */
 	public OptionRiskLadder(List<EuropeanOption> options) {
+		Log.getLogger().info("OptionRiskLadder: constructing...");
 		riskMap = new ConcurrentHashMap<>();
 		
 		options.forEach(
@@ -47,12 +52,6 @@ public class OptionRiskLadder implements RiskListener {
 		riskService = new RiskService("OptionRiskLadder", RiskEngine.getMarketDataService(), LocalDate.now());
 		subscribeAllToRiskService();
 		subscribeUnderlyingsToMarketDataService();
-	}
-	
-	private void subscribeUnderlyingsToMarketDataService() {
-		Log.getLogger().info("OptionRiskLadder: subscribing to underlyings to MarketDataService...");
-		Set<Security> underlyings = riskMap.keySet().stream().map(option -> option.getUnderlying()).collect(Collectors.toSet());
-		underlyings.forEach(underlying -> RiskEngine.getMarketDataService().addListener(underlying, (instrument, marketData) -> {}));		
 	}
 
 	@Override
@@ -68,23 +67,52 @@ public class OptionRiskLadder implements RiskListener {
 		notifyListeners(option);
 	}
 	
+	/**
+	 * Add this risk listener
+	 * @param riskListener
+	 * @return
+	 */
 	public RiskListener addListener(RiskListener riskListener) {
+		Log.getLogger().info("OptionRiskLadder: addListener " + riskListener);
 		synchronized(listenerLock) {
 			listeners.add(riskListener);
 		}
 		return riskListener;
 	}
 	
+	/**
+	 * Remove this risk listener
+	 * @param riskListener
+	 */
 	public void removeListener(RiskListener riskListener) {
+		Log.getLogger().info("OptionRiskLadder: removeListener " + riskListener);
 		synchronized(listenerLock) {
 			listeners.remove(riskListener);
 		}
 	}
 	
+	/**
+	 * Dispose of this ladder, unsubscribe all from risk and market data service
+	 */
+	public void dispose() {
+		Log.getLogger().info("OptionRiskLadder: dispose..");
+		unsubscribeAll();
+	}
+	
+	/**
+	 * Get the current risk for all options in this ladder
+	 * The map returned is sorted by the natural ordering of the options ie. by option name
+	 * which essentially means they are sorted in ascending strike order, and is unmodifiable
+	 * @return
+	 */
 	public Map<EuropeanOption, Risk> getRiskMap() {
 		return Collections.unmodifiableSortedMap(new TreeMap<>(riskMap));
 	}
 	
+	/**
+	 * Notify all listeners for the OptionRiskLadder that an update has occurred for the given option
+	 * @param option
+	 */
 	protected void notifyListeners(EuropeanOption option) {
 		Log.getLogger().info("OptionRiskLadder: notifying subscriptions to " + option);
 		if (option == null) return;
@@ -100,6 +128,11 @@ public class OptionRiskLadder implements RiskListener {
 		}	
 	}
 
+	private void subscribeUnderlyingsToMarketDataService() {
+		Log.getLogger().info("OptionRiskLadder: subscribing to underlyings to MarketDataService...");
+		Set<Security> underlyings = riskMap.keySet().stream().map(option -> option.getUnderlying()).collect(Collectors.toSet());
+		underlyings.forEach(underlying -> RiskEngine.getMarketDataService().addListener(underlying, (instrument, marketData) -> {}));		
+	}
 	private void subscribeAllToRiskService() {
 		Log.getLogger().info("OptionRiskLadder: subscribing to RiskService...");
 		riskMap.forEach((option, risk) -> subscribeToRiskService(option));
