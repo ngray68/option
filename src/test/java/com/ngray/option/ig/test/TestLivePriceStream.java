@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import com.ngray.option.Log;
 import com.ngray.option.financialinstrument.FinancialInstrument;
+import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
@@ -71,19 +72,14 @@ public class TestLivePriceStream {
 		
 		// keep track of message  count
 		AtomicInteger count = new AtomicInteger(0);
-		IGPositionList positions = session.getPositions();
-		positions.getPositions().forEach((position)->{
-			try {
-				stream.addSubscription(
-						FinancialInstrument.fromIGMarket(position.getMarket()), 
-						(instr, marketData) -> { 
-								System.out.println("Instrument: " + instr.getIdentifier() + " Mid-price: " + marketData.getMid()); 
-								count.incrementAndGet();
-							} 
-						);
-			} catch (MissingReferenceDataException e) {
-				e.printStackTrace();
-			} });
+		FinancialInstrument instrument = new Security("IX.D.FTSE.DAILY.IP");
+		stream.addSubscription(
+				instrument, 
+				(instr, marketData) -> { 
+						System.out.println("Instrument: " + instr.getIdentifier() + " Mid-price: " + marketData.getMid()); 
+						count.incrementAndGet();
+					} 
+				);
 		
 		// sleep for a while to allow time to receive some messages
 		Thread.sleep(30000);

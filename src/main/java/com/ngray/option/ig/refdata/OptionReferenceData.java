@@ -39,7 +39,14 @@ public class OptionReferenceData {
 	public OptionReferenceData(String optionName, Security underlying, double strike, LocalDate expiryDate, EuropeanOption.Type callOrPut, double dividendYield, double riskFreeRate) {
 	  this.optionName = optionName;  
 	  this.underlying = underlying;
-	  this.underlyingEpic = underlying.getIGMarket().getEpic();
+	  
+	  // If we have an IGMarket, use that to determine the epic
+	  // If we don't then use the identifier
+	  if (underlying.getIGMarket() != null) {
+		  this.underlyingEpic = underlying.getIGMarket().getEpic();
+	  } else {
+		  this.underlyingEpic = underlying.getIdentifier();
+	  }
 	  this.strike = strike;
 	  this.expiryDate = expiryDate;
 	  this.callOrPut = callOrPut;  
