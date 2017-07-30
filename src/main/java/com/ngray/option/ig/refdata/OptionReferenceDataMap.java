@@ -120,6 +120,7 @@ public class OptionReferenceDataMap {
 					}
 					);
 		} catch (IOException | MissingReferenceDataException | URISyntaxException e) {
+			Log.getLogger().error(e.getMessage(), e);
 			throw new SessionException(e.getMessage());
 		}
 	}

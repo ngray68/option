@@ -75,6 +75,7 @@ public class OptionReferenceDataLoader {
 	 * @throws retu
 	 */
 	public static List<Map<String, String>> loadFromResource(String resourceName) throws IOException, MissingReferenceDataException   {
+		Log.getLogger().info("OptionReferenceDataLoader: load from resource " + resourceName);
 		InputStream in = new Object().getClass().getResourceAsStream(resourceName); 
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 			return load(reader);
@@ -83,6 +84,7 @@ public class OptionReferenceDataLoader {
 	
 	
 	public static List<Map<String,String>> loadFromResources(String filter) throws IOException, MissingReferenceDataException, URISyntaxException {
+		Log.getLogger().info("OptionReferenceDataLoader: load from classpath resources filtered by " + filter);
 		List<Map<String, String>> results = new ArrayList<>();
 		List<String> resources = getResourceNames(filter);
 		for (String resource : resources) {
@@ -92,11 +94,12 @@ public class OptionReferenceDataLoader {
 	}
 	
 	private static List<String> getResourceNames(String filter) throws URISyntaxException, IOException {
-		
+		Log.getLogger().debug("OptionReferenceDataLoader: get resource names matching filter " + filter);
 		PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-		Resource[] resources = resolver.getResources(filter);
+		Resource[] resources = resolver.getResources("classpath*:" + filter);
 		List<String> resourceNames = new ArrayList<>();
 		for (Resource resource : Arrays.asList(resources)) {
+			Log.getLogger().debug("OptionReferenceDataLoader: matching resource " + resource);
 			String fullPath = resource.getURI().toString();
 			resourceNames.add(fullPath.substring(fullPath.lastIndexOf("/")));
 		}
