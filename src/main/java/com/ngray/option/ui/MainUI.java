@@ -91,6 +91,13 @@ public class MainUI {
 				(event) -> { showOpenPositions(); }
 				);
 		
+		JMenuItem runScenario = new JMenuItem("Run Scenario...");
+		riskMenu.add(runScenario);
+		
+		runScenario.addActionListener(
+				(event) -> runScenario()
+		);
+		
 		mainMenu.add(analysisMenu);
 		mainMenu.add(riskMenu);
 		parentFrame.setJMenuBar(mainMenu);
@@ -107,4 +114,9 @@ public class MainUI {
 	private void showOptionLadderDialog() {
 		new OptionLadderDialog(this).show();
 	}
+	
+	private void runScenario() {
+		new ScenarioDefinitionDialog(this).show();
+	}
+
 }

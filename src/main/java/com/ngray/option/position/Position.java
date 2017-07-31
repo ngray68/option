@@ -281,5 +281,15 @@ public class Position {
 		this.timestamp = timestamp;
 	}
 
+
+	public Position copy() throws MissingReferenceDataException {
+		if (getIgPosition() != null) {
+			return new Position(getIgPosition());
+		} else {
+			return new Position(getId(), getInstrument(), getPositionSize(), getOpen());
+		}
+				
+	}
+
 	
 }
