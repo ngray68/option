@@ -1,10 +1,7 @@
 package com.ngray.option.ui;
 
-import java.awt.EventQueue;
+import java.awt.Component;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
 import java.util.Set;
 
@@ -14,6 +11,7 @@ import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
@@ -36,6 +34,11 @@ public class PositionRiskView {
 	private MainUI parentUI;
 	
 	/**
+	 * The frame in which all open position windows appear
+	 */
+	private JInternalFrame parentInternalFrame;
+	
+	/**
 	 * Constructor
 	 * @param parentUI
 	 */
@@ -49,47 +52,38 @@ public class PositionRiskView {
 	public void showPositions() {
 		Log.getLogger().debug("Showing open positions");
 		RiskEngine.getPositionService().setView(this);
-		
-		parentUI.setLayout(new GridLayout(0,1));
-		if (createPositionTables() == 0) {
-			Log.getLogger().debug("No open positions");
-			JDialog noPositions = new JDialog(parentUI.getParentFrame());
-			noPositions.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
-			noPositions.setLayout(new GridLayout(0,1));
-			JButton ok = new JButton("OK");
-			ok.addActionListener(event -> noPositions.dispose());
-			noPositions.add(new JLabel("You have no open positions at present"));
-			noPositions.add(ok);
-			noPositions.pack();
-			noPositions.setVisible(true);
-			return;
-		}
-		
-		parentUI.getParentFrame().addWindowListener(new WindowAdapter() {
+	
+		InternalFrameListener listener = new InternalFrameAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e) {
+			public void internalFrameClosed(InternalFrameEvent e) {
+				Log.getLogger().debug("JInternalFrame closed event received");
 				hidePositions();
-				parentUI.getParentFrame().removeWindowListener(this);
-			}
-		});
-		parentUI.setFrameTitle("Open Positions");
+				e.getInternalFrame().removeInternalFrameListener(this);
+			}	
+		};
+		parentInternalFrame = Frames.createJInternalFrame("Open Positions", listener);
+		parentInternalFrame.setLayout(new GridLayout(0,1));
+		parentUI.getDesktopPane().add(parentInternalFrame);
+		if (createPositionTables() == 0) {
+			showNoPositionsDialog();
+		}
 	}
 	
 	/**
 	 * Hide the positions - effectively makes the position risk view invisible
 	 */
 	public void hidePositions() {
-		Log.getLogger().debug("Hiding open positions");
-		for (JInternalFrame frame : parentUI.getDesktopPane().getAllFrames()) {
+		Log.getLogger().debug("Closing open positions view");	
+		for (Component component : parentInternalFrame.getContentPane().getComponents()) {
 			try {
-				frame.setClosed(true);
+				if (component instanceof JInternalFrame) {
+					Log.getLogger().debug("Closing " + ((JInternalFrame)component).getTitle());
+					((JInternalFrame)component).setClosed(true);
+				}
 			} catch (PropertyVetoException e) {
 				Log.getLogger().warn(e.getMessage(), true);
 			}
 		}
-		
-		parentUI.setFrameTitle("");
-		parentUI.show();
 	}
 	
 	/**
@@ -110,8 +104,9 @@ public class PositionRiskView {
 		Log.getLogger().debug("Creating position tables...");
 		Set<FinancialInstrument> underlyings = RiskEngine.getPositionService().getUnderlyings();			
 		underlyings.forEach(underlying -> {
-			createPositionTable(underlying);
+			parentInternalFrame.add(createPositionTable(underlying));
 		});
+		parentInternalFrame.pack();
 		return underlyings.size();
 	}
 	
@@ -119,75 +114,38 @@ public class PositionRiskView {
 	 * Create a single position table for the given underlying
 	 * @param underlying
 	 */
-	private void createPositionTable(FinancialInstrument underlying) {
+	private JInternalFrame createPositionTable(FinancialInstrument underlying) {
 		Log.getLogger().debug("Creating position table for underlying " + underlying);
 		PositionRiskTableModel model = new PositionRiskTableModel(RiskEngine.getPositionService().getPositions(underlying));
+		RiskEngine.getPositionService().addListener(underlying, model);
 		JTable table = new JTable(model);
 		JScrollPane pane = new JScrollPane(table);
-		
-		JInternalFrame frame = new JInternalFrame();
-		frame.add(pane);
-		frame.setTitle(underlying.getName() + " " + underlying.getIGMarket().getExpiry());
-		frame.setMaximizable(true);
-		frame.setResizable(true);
-		frame.setClosable(true);
-		frame.setIconifiable(true);
-		frame.pack();
-		frame.addInternalFrameListener(new InternalFrameListener() {
 
-			@Override
-			public void internalFrameOpened(InternalFrameEvent e) {
-				// unimplemented
-			}
-
-			@Override
-			public void internalFrameClosing(InternalFrameEvent e) {
-				// unimplemented
-			}
-
+		InternalFrameListener listener = new InternalFrameAdapter() {
 			@Override
 			public void internalFrameClosed(InternalFrameEvent e) {
 				Log.getLogger().debug("JInternalFrame closed event received");
 				RiskEngine.getPositionService().removeListener(underlying, model);
+				e.getInternalFrame().removeInternalFrameListener(this);
 			}
-
-			@Override
-			public void internalFrameIconified(InternalFrameEvent e) {
-				// unimplemented				
-			}
-
-			@Override
-			public void internalFrameDeiconified(InternalFrameEvent e) {
-				// unimplemented
-			}
-
-			@Override
-			public void internalFrameActivated(InternalFrameEvent e) {
-				// unimplemented
-			}
-
-			@Override
-			public void internalFrameDeactivated(InternalFrameEvent e) {
-				// unimplemented
-			}		
-		});
-	
-		show(frame);
-		parentUI.getDesktopPane().add(frame);
-		RiskEngine.getPositionService().addListener(underlying, model);
+		};
+		JInternalFrame frame = Frames.createJInternalFrame(underlying.getName() + " " + underlying.getIGMarket().getExpiry(), listener, pane);
+		return frame;
 	}
-
+	
 	/**
-	 * Show the JInternalFrame
-	 * @param frame
+	 * Show a dialog if there are no open positions
 	 */
-	private void show(JInternalFrame frame) {
-		EventQueue.invokeLater(()-> {
-			try {
-				frame.setVisible(true);
-			} catch (HeadlessException e) {
-				Log.getLogger().error(e.getMessage(), e);
-			}
-		});		
+	private void showNoPositionsDialog() {
+		Log.getLogger().debug("No open positions");
+		JDialog noPositions = new JDialog(parentUI.getParentFrame());
+		noPositions.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
+		noPositions.setLayout(new GridLayout(0,1));
+		JButton ok = new JButton("OK");
+		ok.addActionListener(event -> noPositions.dispose());
+		noPositions.add(new JLabel("No open positions"));
+		noPositions.add(ok);
+		noPositions.pack();
+		noPositions.setVisible(true);
 	}
 }

@@ -59,6 +59,10 @@ public class Scenario {
 		this.scenarioDefinition = definition;
 		this.valueDate = valueDate;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
 	public Position getBasePosition() {
 		return basePosition;

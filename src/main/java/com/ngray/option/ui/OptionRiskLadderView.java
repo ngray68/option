@@ -1,10 +1,7 @@
 package com.ngray.option.ui;
 
-import java.awt.EventQueue;
+import java.awt.Component;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +12,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 
 import com.ngray.option.Log;
 import com.ngray.option.analysis.OptionRiskLadder;
@@ -30,6 +28,8 @@ import com.ngray.option.financialinstrument.Security;
 public class OptionRiskLadderView {
 	
 	private final MainUI parentUI;
+	
+	private JInternalFrame parentInternalFrame;
 	
 	private OptionRiskLadder callRiskLadder;
 	private OptionRiskLadder putRiskLadder;
@@ -66,25 +66,26 @@ public class OptionRiskLadderView {
 		putRiskLadder = new OptionRiskLadder(puts);
 	}
 	
-	private void createRiskTables() {		
-		parentUI.setLayout(new GridLayout(1,2));
-		
+	private void createRiskTables() {
+			
 		String underlyingName = underlying.getName() + " " + underlying.getIGMarket().getExpiry();
 		JInternalFrame callFrame = createFrame(underlyingName + " CALLS Expiring " + optionExpiry, callRiskLadder);
 		JInternalFrame putFrame = createFrame(underlyingName + " PUTS Expiring " + optionExpiry, putRiskLadder);
-		show(callFrame);
-		show(putFrame);
-		parentUI.setFrameTitle("Option Risk Ladder");	
-		parentUI.getDesktopPane().add(callFrame);
-		parentUI.getDesktopPane().add(putFrame);
+		//show(callFrame);
+		//show(putFrame);
 		
-		parentUI.getParentFrame().addWindowListener(new WindowAdapter() {
+		InternalFrameListener listener = new InternalFrameAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e) {
+			public void internalFrameClosed(InternalFrameEvent e) {
 				onClose();
-				parentUI.getParentFrame().removeWindowListener(this);
+				parentInternalFrame.removeInternalFrameListener(this);
 			}
-		});
+		};
+		
+		parentInternalFrame = Frames.createJInternalFrame("Option Risk Ladder", listener, callFrame, putFrame);
+		parentInternalFrame.setLayout(new GridLayout(1,2));
+		parentInternalFrame.pack();
+		parentUI.getDesktopPane().add(parentInternalFrame);
 	}
 	
 	private JInternalFrame createFrame(String title, OptionRiskLadder riskLadder) {
@@ -92,49 +93,29 @@ public class OptionRiskLadderView {
 		JTable table = new JTable(model);
 		JScrollPane pane = new JScrollPane(table);
 		
-		JInternalFrame frame = new JInternalFrame();
-		frame.add(pane);
-		frame.setTitle(title);
-		frame.setMaximizable(true);
-		frame.setResizable(true);
-		frame.setClosable(true);
-		frame.setIconifiable(true);
-		frame.pack();
-		frame.addInternalFrameListener(new InternalFrameAdapter() {
+		InternalFrameListener listener = new InternalFrameAdapter() {
 			@Override
 			public void internalFrameClosed(InternalFrameEvent e) {
 				Log.getLogger().debug("OptionRiskLadderView::InternalFrame close event received");
 				riskLadder.dispose();
 			}
-		});
+		};
+		
+		JInternalFrame frame = Frames.createJInternalFrame(title, listener, pane);
 		return frame;
 	}
 	
 	private void onClose() {
 		Log.getLogger().debug("Closing option risk ladder view....");
-		for (JInternalFrame frame : parentUI.getDesktopPane().getAllFrames()) {
+		for (Component component : parentInternalFrame.getContentPane().getComponents()) {
 			try {
-				frame.setClosed(true);
+				if (component instanceof JInternalFrame) {
+					Log.getLogger().debug("Closing " + ((JInternalFrame)component).getTitle());
+					((JInternalFrame)component).setClosed(true);
+				}
 			} catch (PropertyVetoException e) {
 				Log.getLogger().warn(e.getMessage(), true);
 			}
 		}
-		
-		parentUI.setFrameTitle("");
-		parentUI.show();
-	}
-		
-	/**
-	 * Show the JInternalFrame
-	 * @param frame
-	 */
-	private void show(JInternalFrame frame) {
-		EventQueue.invokeLater(()-> {
-			try {
-				frame.setVisible(true);
-			} catch (HeadlessException e) {
-				Log.getLogger().error(e.getMessage(), e);
-			}
-		});		
 	}
 }

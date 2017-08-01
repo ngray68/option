@@ -7,13 +7,13 @@ public class ScenarioDefinition {
 		IMPLIED_VOL
 	};
 	
-	private final Type type;
+	private Type type;
 	
-	private final double increment;
+	private double increment;
 	
-	private final double baseValue;
+	private double baseValue;
 	
-	private final double range;
+	private double range;
 	
 	private double[] values;
 	
@@ -26,25 +26,42 @@ public class ScenarioDefinition {
 	 * @param range
 	 */
 	public ScenarioDefinition(Type type, double increment, double baseValue, double range) {
-		this.type = type;
-		this.increment = increment;
-		this.baseValue = baseValue;
-		this.range = range;
+		this.setType(type);
+		this.setIncrement(increment);
+		this.setBaseValue(baseValue);
+		this.setRange(range);
 	}
-
 
 	public Type getType() {
 		return type;
 	}
 
+	public void setType(Type type) {
+		this.type = type;
+	}
 
 	public double getIncrement() {
 		return increment;
 	}
 
+	public void setIncrement(double increment) {
+		this.increment = increment;
+	}
+
+	public double getBaseValue() {
+		return baseValue;
+	}
+
+	public void setBaseValue(double baseValue) {
+		this.baseValue = baseValue;
+	}
 
 	public double getRange() {
 		return range;
+	}
+
+	public void setRange(double range) {
+		this.range = range;
 	}
 	
 	/**
@@ -73,15 +90,15 @@ public class ScenarioDefinition {
 	}
 
 	private void validate() throws InvalidScenarioDefinitionException {
-		if (range <= 0) {
+		if (Double.compare(range, 0.0) <= 0) {
 			throw new InvalidScenarioDefinitionException("Scenario range must be greater than zero");
 		}
 		
-		if (increment <= 0) {
+		if (Double.compare(increment, 0.0) <= 0) {
 			throw new InvalidScenarioDefinitionException("Scenario increment must be greater than zero");
 		}
 		
-		if (increment > range/2.0) {
+		if (Double.compare(increment, range/2.0) > 0) {
 			throw new InvalidScenarioDefinitionException("Scenario increment must not be greater than half the range");
 		}	
 	}
