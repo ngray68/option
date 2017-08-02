@@ -1,10 +1,8 @@
 package com.ngray.option.ui;
 
-import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.beans.PropertyVetoException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
@@ -39,19 +37,35 @@ public class ScenarioView {
 		}
 	};
 	
+	public static final int DEFAULT_WIDTH = 1000;
+	public static final int DEFAULT_HEIGHT = 200;
+	
 	private final MainUI parentUI;
 	private JInternalFrame parentInternalFrame;
-	private final List<Scenario> scenarios;
+	private boolean closed;
 	
-	public ScenarioView(MainUI parentUI, List<Scenario> scenarios) {
+	private JInternalFrame lastInternalFrameCreated;
+	
+	public ScenarioView(MainUI parentUI) {
 		this.parentUI = parentUI;
-		this.scenarios = new ArrayList<>(scenarios);
+		createParentInternalFrame();
+		closed = true;
 	}
 	
 	public void show() {
-		createParentInternalFrame();
-		createScenarioTables();
-		parentUI.getDesktopPane().add(parentInternalFrame);
+		if (isClosed()) {	
+			parentInternalFrame.setVisible(true);
+			parentUI.getDesktopPane().add(parentInternalFrame);
+			closed = false;
+		}
+	}
+	
+	private boolean isClosed() {
+		return closed;
+	}
+
+	public void addScenario(Scenario scenario) {
+		createScenarioTable(scenario);
 	}
 
 	private void createParentInternalFrame() {
@@ -65,13 +79,7 @@ public class ScenarioView {
 		parentInternalFrame = Frames.createJInternalFrame("Scenarios", listener);
 		parentInternalFrame.setLayout(new GridLayout(0,1));
 	}
-	
-	private void createScenarioTables() {
-		scenarios.forEach(
-			scenario -> createScenarioTable(scenario)
-			);
-	}
-	
+
 	private void createScenarioTable(Scenario scenario) {
 		
 		JTabbedPane tabbedPane = new JTabbedPane();
@@ -81,30 +89,32 @@ public class ScenarioView {
 			tabbedPane.add(riskMeasure.toString(), new JScrollPane(table));
 		}
 		
-		String scenarioName = "Test";
+		String scenarioName = scenario.getName();
 		InternalFrameListener listener = new InternalFrameAdapter() {
 			@Override
 			public void internalFrameClosed(InternalFrameEvent e) {
-				// TODO - clean up
-				e.getInternalFrame().removeInternalFrameListener(this);;
+				e.getInternalFrame().removeInternalFrameListener(this);
+				parentInternalFrame.remove(e.getInternalFrame());	
 			}
 		};
 		JInternalFrame frame = Frames.createJInternalFrame(scenarioName, listener, tabbedPane);
+		
+		// TOOD - this is crude, needs revisiting
+		if (lastInternalFrameCreated != null) {		
+			frame.setPreferredSize(lastInternalFrameCreated.getSize());
+		} else {
+			frame.setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+		}
+		lastInternalFrameCreated = frame;
+		
 		parentInternalFrame.add(frame);
+		parentInternalFrame.pack();
 	}
 
 	private void onClose() {
 		Log.getLogger().debug("Closing scenario view....");
-		for (Component component : parentInternalFrame.getContentPane().getComponents()) {
-			try {
-				if (component instanceof JInternalFrame) {
-					Log.getLogger().debug("Closing " + ((JInternalFrame)component).getTitle());
-					((JInternalFrame)component).setClosed(true);
-				}
-			} catch (PropertyVetoException e) {
-				Log.getLogger().warn(e.getMessage(), true);
-			}
-		}
-		
+		parentUI.getDesktopPane().remove(parentInternalFrame);
+		closed = true;
+		// we don't remove the scenarios - they are remembered unless explicitly closed
 	}
 }

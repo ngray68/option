@@ -1,11 +1,15 @@
 package com.ngray.option.analysis.scenario;
 
+import com.ngray.option.financialinstrument.FinancialInstrument;
+
 public class ScenarioDefinition {
 	
 	public enum Type {
 		UNDERLYING,
 		IMPLIED_VOL
 	};
+	
+	private FinancialInstrument instrument;
 	
 	private Type type;
 	
@@ -25,7 +29,8 @@ public class ScenarioDefinition {
 	 * @param baseValue
 	 * @param range
 	 */
-	public ScenarioDefinition(Type type, double increment, double baseValue, double range) {
+	public ScenarioDefinition(FinancialInstrument instrument, Type type, double increment, double baseValue, double range) {
+		this.setInstrument(instrument);
 		this.setType(type);
 		this.setIncrement(increment);
 		this.setBaseValue(baseValue);
@@ -67,13 +72,10 @@ public class ScenarioDefinition {
 	/**
 	 * Return the scenario values
 	 * @return
-	 * @throws InvalidScenarioDefinitionException
 	 */
-	public double[] getValues() throws InvalidScenarioDefinitionException {
+	public double[] getValues() {
 		if (values != null) return values;
 		
-		validate();
-			
 		double min = baseValue - range/2.0;
 		double max = baseValue + range/2.0;
 		
@@ -89,17 +91,39 @@ public class ScenarioDefinition {
 		return values;
 	}
 
-	private void validate() throws InvalidScenarioDefinitionException {
+	public FinancialInstrument getInstrument() {
+		return instrument;
+	}
+
+	public void setInstrument(FinancialInstrument instrument) {
+		this.instrument = instrument;
+	}
+	
+	public boolean validate() {
+		if (instrument == null) {
+			return false;
+		}
+		
+		if (Double.isNaN(baseValue)) {
+			return false;
+		}
+		
 		if (Double.compare(range, 0.0) <= 0) {
-			throw new InvalidScenarioDefinitionException("Scenario range must be greater than zero");
+			return false;
 		}
 		
 		if (Double.compare(increment, 0.0) <= 0) {
-			throw new InvalidScenarioDefinitionException("Scenario increment must be greater than zero");
+			return false;
 		}
 		
 		if (Double.compare(increment, range/2.0) > 0) {
-			throw new InvalidScenarioDefinitionException("Scenario increment must not be greater than half the range");
+			return false;
 		}	
+		
+		return true;
+	}
+
+	public ScenarioDefinition copy() {
+		return new ScenarioDefinition(getInstrument(), getType(), getIncrement(), getBaseValue(), getRange());
 	}
 }

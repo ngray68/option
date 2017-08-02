@@ -1,174 +1,48 @@
 package com.ngray.option.analysis.scenario;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.ngray.option.Log;
-import com.ngray.option.financialinstrument.EuropeanOption;
-import com.ngray.option.financialinstrument.FinancialInstrument;
-import com.ngray.option.ig.refdata.MissingReferenceDataException;
-import com.ngray.option.marketdata.MarketData;
-import com.ngray.option.marketdata.MarketDataCollection;
-import com.ngray.option.model.ModelException;
-import com.ngray.option.marketdata.MarketData.Type;
 import com.ngray.option.position.Position;
-import com.ngray.option.risk.Risk;
 
-/**
- * Calculates the effect on risk and P&L on changes in the underlying variables
- * eg. underlying price or implied volatility
- * @author nigelgray
- *
- */
-public class Scenario {
+public interface Scenario {
 	
 	/**
-	 * The name of this scenario
+	 * Evaluate the scenario and return the results in a ScenarioResult object
+	 * @return
 	 */
-	private final String name;
+	public ScenarioResult evaluate();
 	
 	/**
-	 * The base case position used to calculate the scenarios
+	 * Get the name of this scenario
+	 * @return
 	 */
-	private final Position basePosition;
+	public String getName();
 	
 	/**
-	 * This defines the parameters of the scenario
+	 * Get the scenario definition object which defines the perturbations
+	 * to be applied in this scenario
+	 * @return
 	 */
-	private final ScenarioDefinition scenarioDefinition;
+	public ScenarioDefinition getDefinition();
 	
 	/**
-	 * The value date for the scenario
+	 * Get the value date used to evaluate the scenario
+	 * @return
 	 */
-	private final LocalDate valueDate;
+	public LocalDate getValueDate();
 	
 	/**
-	 * The positions that would be in play for each point on the scenario
+	 * Get the positions whose risk will be calculated using
+	 * the perturbations defined by the scenario
+	 * @return
 	 */
-	private List<Position> scenarioPositions;
+	public List<Position> getBasePositions();
 	
+	/**
+	 * Get the scenario result object previously calculated by evaluate()
+	 * @return
+	 */
+	public ScenarioResult getScenarioResult();
 
-	public Scenario(String name, Position position, ScenarioDefinition definition, LocalDate valueDate) {
-		Log.getLogger().info("Creating scenario " + name);
-		this.name= name;
-		this.basePosition = position;
-		this.scenarioDefinition = definition;
-		this.valueDate = valueDate;
-	}
-	
-	public String getName() {
-		return name;
-	}
-
-	public Position getBasePosition() {
-		return basePosition;
-	}
-
-	public ScenarioDefinition getScenarioDefinition() {
-		return scenarioDefinition;
-	}
-	
-	public void evaluate() throws InvalidScenarioDefinitionException {
-		Log.getLogger().info("Evaluating scenario " + name);
-		switch (scenarioDefinition.getType()) {
-		case UNDERLYING:
-			scenarioPositions = evaluateUnderlyingScenario();
-			break;
-		case IMPLIED_VOL:
-			evaluateImpliedVolScenario();
-			break;
-		default:
-			break;
-		}
-	}
-
-	public List<Position> getScenarioPositions() {
-		return scenarioPositions == null ? new ArrayList<>() : Collections.unmodifiableList(scenarioPositions);
-	}
-	
-	@Override
-	public String toString() {
-		String string = "Scenario " + name + " results\n";
-		try {
-			double[] values = scenarioDefinition.getValues();
-			string += basePosition.getInstrument().getIdentifier() + "\n";
-			string += "Underlying: " + "\t";
-			for (double value : values) {
-				string += value + "\t";
-			}
-			
-			string += "\n";
-			string += "Delta: " + "\t";
-			for (Position position : scenarioPositions) {
-				string += position.getPositionRisk().getDelta() + "\t";
-			}
-			
-			string += "\n";
-			string += "PnL: " + "\t";
-			for (Position position : scenarioPositions) {
-				string += position.getPositionPnL() + "\t";
-			}
-			string += "\n";
-		} catch (InvalidScenarioDefinitionException e) {
-			Log.getLogger().error(e.getMessage(), e);
-		}
-		
-		return string;
-		
-	}
-
-	private void evaluateImpliedVolScenario() {
-		// TODO
-	}
-
-	private List<Position> evaluateUnderlyingScenario() throws InvalidScenarioDefinitionException {	
-		Log.getLogger().info("Evaluating underlying price change scenario " + name);
-		FinancialInstrument instrument = basePosition.getInstrument();
-		List<MarketDataCollection> marketDataCollectionList = getMarketDataCollectionForUnderlyingScenario();
-		List<Position> positionList = new ArrayList<>();
-		marketDataCollectionList.forEach(
-			marketDataCollection -> {
-				try {
-					Position position = basePosition.copy();
-					Risk risk = instrument.getModel().calculateRisk(instrument, marketDataCollection, valueDate);
-					position.updatePositionRisk(risk);
-					position.updatePositionPnL(new MarketData(instrument.getIdentifier(), risk.getValue(), Type.PRICE));
-					positionList.add(position);
-				} catch (ModelException | MissingReferenceDataException e) {
-					Log.getLogger().error("Error evaluating scenario " + name, e);
-				}
-			}
-		);
-		return positionList;
-	}
-	
-	private List<MarketDataCollection> getMarketDataCollectionForUnderlyingScenario() throws InvalidScenarioDefinitionException {
-		// calculate risk and option price while holding implied vol constant
-		double[] underlyingPriceValues = scenarioDefinition.getValues();
-		
-		List<MarketDataCollection> marketDataCollectionList = new ArrayList<MarketDataCollection>();
-		
-		FinancialInstrument instrument = basePosition.getInstrument();
-		String id = instrument.getUnderlying().getIdentifier();
-		double constantImpliedVolatility = basePosition.getPositionRisk().getImpliedVolatility();	
-		
-		Log.getLogger().info("Using constant implied volatility: "  + constantImpliedVolatility);
-		//Log.getLogger().info("Using underlying prices: "  + underlyingPriceValues);
-		
-		for (double underlyingPrice : underlyingPriceValues) {
-			Map<FinancialInstrument, MarketData> map = new HashMap<>();
-			if (instrument instanceof EuropeanOption) {
-				map.put(instrument, new MarketData(instrument.getIdentifier(),constantImpliedVolatility, Type.VOLATILITY));
-			}
-			
-			map.put(instrument.getUnderlying(), new MarketData(id, underlyingPrice, Type.PRICE));
-			marketDataCollectionList.add(new MarketDataCollection(map));
-		}
-		
-		return marketDataCollectionList;		
-	}	
 }

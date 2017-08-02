@@ -3,8 +3,6 @@ package com.ngray.option.ui;
 import java.awt.EventQueue;
 import java.awt.HeadlessException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.JButton;
@@ -17,15 +15,21 @@ import javax.swing.event.DocumentListener;
 
 import com.ngray.option.Log;
 import com.ngray.option.RiskEngine;
-import com.ngray.option.analysis.scenario.InvalidScenarioDefinitionException;
 import com.ngray.option.analysis.scenario.Scenario;
 import com.ngray.option.analysis.scenario.ScenarioDefinition;
 import com.ngray.option.analysis.scenario.ScenarioDefinition.Type;
+import com.ngray.option.analysis.scenario.UnderlyingPriceScenario;
 import com.ngray.option.financialinstrument.FinancialInstrument;
-import com.ngray.option.position.PositionService;
-
 import net.miginfocom.swing.MigLayout;
 
+/**
+ * Dialog box in which users can define and run scenarios over their positions.
+ * eg. by specifying an underlying, a central price, price range and price increments,
+ * you can see the effect of underlying price change on the pnl and risk for all
+ * your  open positions in that underlying
+ * @author nigelgray
+ *
+ */
 public class ScenarioDefinitionDialog {
 	
 	private final MainUI parentUI;
@@ -40,16 +44,14 @@ public class ScenarioDefinitionDialog {
 	private JButton run;
 	private JButton cancel;
 	
-	private FinancialInstrument selectedUnderlying;
 	private ScenarioDefinition scenarioDefinition;
 	
 	private final static double PRICE_INCREMENT_DEFAULT = 10.0; 
-	private final static double PRICE_RANGE_DEFAULT = 200.0;
+	private final static double PRICE_RANGE_DEFAULT = 100.0;
 	
 	public ScenarioDefinitionDialog(MainUI parentUI) {
 		this.parentUI = parentUI;
-		selectedUnderlying = null;
-		scenarioDefinition = new ScenarioDefinition(Type.UNDERLYING, PRICE_INCREMENT_DEFAULT, 0, PRICE_RANGE_DEFAULT);
+		scenarioDefinition = new ScenarioDefinition(null, Type.UNDERLYING, PRICE_INCREMENT_DEFAULT, 0, PRICE_RANGE_DEFAULT);
 		createComponents();
 		addListeners();
 	}
@@ -143,7 +145,7 @@ public class ScenarioDefinitionDialog {
 		
 		run = new JButton("Run");
 		cancel = new JButton("Cancel");
-		
+		run.setEnabled(false);
 		
 		dialog.setLayout(new MigLayout("", "[][][]", "[][][][][][][]"));
 		dialog.add(underlyingLabel, "Cell 0 0,span,grow");
@@ -164,63 +166,82 @@ public class ScenarioDefinitionDialog {
 
 	private void onSelectUnderlying() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onSelectUnderlying");
-		selectedUnderlying = ((NameAdapter)underlying.getSelectedItem()).getInstrument();
+		scenarioDefinition.setInstrument(((NameAdapter)underlying.getSelectedItem()).getInstrument());
+		validate();
 	}
 	
 	private void onSelectScenarioType() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onSelectScenarioType");
 		scenarioDefinition.setType((Type)scenarioType.getSelectedItem());
+		validate();
 	}
 	
 	private void onEditBaseCase() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onEditBaseCase");
 		double baseCaseValue = Double.parseDouble(baseCase.getText());
 		scenarioDefinition.setBaseValue(baseCaseValue);
+		validate();
 	}
 	
 	private void onEditIncrement() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onEditIncrement");
 		double incValue = Double.parseDouble(increment.getText());
-		scenarioDefinition.setBaseValue(incValue);
+		scenarioDefinition.setIncrement(incValue);		validate();
 	}
 	
 	private void onEditRange() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onEditRange");
 		double rangeValue = Double.parseDouble(range.getText());
-		scenarioDefinition.setBaseValue(rangeValue);
+		scenarioDefinition.setRange(rangeValue);
+		validate();
 	}
-	
+
 	private void onRun() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onRun");
 		runScenario();
-		dialog.dispose();
+		dialog.setVisible(false);
 	}
 
 	private void onCancel() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onCancel");
-		dialog.dispose();
+		dialog.setVisible(false);
 	}
+	
+	private void validate() {
+		if (scenarioDefinition.validate()) {
+			run.setEnabled(true);
+		} else {
+			run.setEnabled(false);
+		}
+	}
+
 	
 	private void runScenario() {
 		// run the scenario over each position in the selected underlying
-		List<Scenario> scenarios = new ArrayList<>();
-		PositionService positionService = RiskEngine.getPositionService();
-		positionService.getPositions(selectedUnderlying).forEach(
-				position -> { scenarios.add(new Scenario(position.getId() + "-scenario", position, scenarioDefinition, LocalDate.now())); }
-				);
+		FinancialInstrument selectedUnderlying = scenarioDefinition.getInstrument();
+		String scenarioName = null;
+		if (selectedUnderlying.getIGMarket() == null) {
+			scenarioName = selectedUnderlying.getIdentifier();
+		} else {
+			scenarioName = selectedUnderlying.getIGMarket().getInstrumentName() + " " + selectedUnderlying.getIGMarket().getExpiry();
+		}
 		
-		// evaluate the scenario
-		scenarios.forEach(scenario -> {
-			try {
-				scenario.evaluate();
-			} catch (InvalidScenarioDefinitionException e) {
-				Log.getLogger().error(e.getMessage(), e);
+		Scenario scenario = null;
+		if (scenarioDefinition.getType() == Type.UNDERLYING) {
+			// the scenario definition is owned by this dialog so we pass a copy to the actual scenario
+			scenario = new UnderlyingPriceScenario(scenarioName, scenarioDefinition.copy(), LocalDate.now());
+			scenario.evaluate();
+			// display the results
+			if (parentUI.getScenarioView() == null) {
+				parentUI.setScenarioView(new ScenarioView(parentUI));	
 			}
-		});
-		// register for position updates which may change the scenario results
-		
-		// display the results
-		new ScenarioView(parentUI, scenarios).show();	
+			parentUI.getScenarioView().addScenario(scenario);
+			parentUI.getScenarioView().show();
+		} else {
+			// TODO - IMPLIED VOL Scenario
+			// for now we just return
+			return;
+		}
 	}
 	
 	// Adapter to simplify listeners for text fields

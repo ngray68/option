@@ -24,7 +24,12 @@ public class MainUI {
 	private JMenu riskMenu;
 	
 	private PositionRiskView positionRiskView;
+	private ScenarioView scenarioView;
 	
+	// keep references to these so we can remember settings from previous uses
+	// in the same session
+	private OptionLadderDialog optionRiskLadderDialog;
+	private ScenarioDefinitionDialog scenarioDefinitionDialog;
 	
 	public MainUI() {
 		initialize();
@@ -48,6 +53,14 @@ public class MainUI {
 
 	public void setFrameTitle(String title) {
 		parentFrame.setTitle(title);
+	}
+	
+	public void setScenarioView(ScenarioView view) {
+		scenarioView = view;
+	}
+	
+	public ScenarioView getScenarioView() {
+		return scenarioView;
 	}
 	
 	
@@ -83,24 +96,39 @@ public class MainUI {
 				);
 		
 		
-		riskMenu = new JMenu("Risk");
-		JMenuItem showPositions = new JMenuItem("Show Positions");
+		riskMenu = new JMenu("Positions");
+		JMenuItem showPositions = new JMenuItem("View Positions");
 		riskMenu.add(showPositions);
 		
 		showPositions.addActionListener(
 				(event) -> { showOpenPositions(); }
 				);
 		
-		JMenuItem runScenario = new JMenuItem("Run Scenario...");
+		JMenuItem runScenario = new JMenuItem("New Scenario...");
 		riskMenu.add(runScenario);
 		
 		runScenario.addActionListener(
-				(event) -> runScenario()
+				(event) -> showRunScenarioDialog()
+		);
+		
+		JMenuItem viewScenarios = new JMenuItem("View Scenarios");
+		riskMenu.add(viewScenarios);
+		
+		viewScenarios.addActionListener( 
+			(event) -> showScenarios()
 		);
 		
 		mainMenu.add(analysisMenu);
 		mainMenu.add(riskMenu);
 		parentFrame.setJMenuBar(mainMenu);
+	}
+
+	private void showScenarios() {
+		Log.getLogger().debug("Showing scenarios");
+		if (scenarioView == null) {
+			scenarioView = new ScenarioView(this);
+		}
+		scenarioView.show();
 	}
 
 	private void showOpenPositions() {
@@ -112,11 +140,16 @@ public class MainUI {
 	}
 		
 	private void showOptionLadderDialog() {
-		new OptionLadderDialog(this).show();
+		if (optionRiskLadderDialog == null) {
+			optionRiskLadderDialog = new OptionLadderDialog(this);
+		}
+		optionRiskLadderDialog.show();
 	}
 	
-	private void runScenario() {
-		new ScenarioDefinitionDialog(this).show();
+	private void showRunScenarioDialog() {
+		if (scenarioDefinitionDialog == null) {
+			scenarioDefinitionDialog = new ScenarioDefinitionDialog(this);
+		}
+		scenarioDefinitionDialog.show();
 	}
-
 }
