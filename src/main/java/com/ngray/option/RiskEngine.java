@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
+
+import com.ngray.option.analysis.scenario.ScenarioDataSource;
+import com.ngray.option.analysis.scenario.ScenarioService;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
@@ -27,8 +30,9 @@ public class RiskEngine {
 	private static RiskService riskService = null;
 	private static PositionService positionService = null;
 	private static Object waitLock = new Object();
-	private static PositionUpdateService positionUpdateService;
-
+	private static PositionUpdateService positionUpdateService = null;
+	private static ScenarioService scenarioService = null;
+	
 	private static String readFile(String fileName) throws IOException {
 		String result = "";
 		try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
@@ -97,6 +101,9 @@ public class RiskEngine {
 			positionService = new PositionService("LIVE", session, riskService, marketDataService, positionUpdateService);
 			positionService.initialize();
 			
+			// Create without a data source for now - will add when we do live updates
+			scenarioService = new ScenarioService("ScenarioService-LIVE", new ScenarioDataSource("ScenarioDataSource-LIVE", positionService));
+			
 			new MainUI().show();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 
@@ -142,7 +149,14 @@ public class RiskEngine {
 	 * @return
 	 */
 	public static MarketDataService getMarketDataService() {
-		// TODO Auto-generated method stub
 		return marketDataService;
+	}
+	
+	/**
+	 * Get the scenario service
+	 * @return
+	 */
+	public static ScenarioService getScenarioService() {
+		return scenarioService;
 	}
 }

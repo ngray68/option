@@ -2,8 +2,6 @@ package com.ngray.option.ui;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.beans.PropertyVetoException;
-
 import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -13,6 +11,7 @@ import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
 import com.ngray.option.Log;
+import com.ngray.option.RiskEngine;
 import com.ngray.option.analysis.scenario.Scenario;
 
 public class ScenarioView {
@@ -65,7 +64,8 @@ public class ScenarioView {
 	}
 
 	public void addScenario(Scenario scenario) {
-		createScenarioTable(scenario);
+		addToScenarioService(scenario);
+		createScenarioTable(scenario);	
 	}
 
 	private void createParentInternalFrame() {
@@ -87,6 +87,7 @@ public class ScenarioView {
 			ScenarioTableModel model = new ScenarioTableModel(scenario, riskMeasure);
 			JTable table = new JTable(model);
 			tabbedPane.add(riskMeasure.toString(), new JScrollPane(table));
+			RiskEngine.getScenarioService().addListener(scenario.getName(), model);
 		}
 		
 		String scenarioName = scenario.getName();
@@ -116,5 +117,13 @@ public class ScenarioView {
 		parentUI.getDesktopPane().remove(parentInternalFrame);
 		closed = true;
 		// we don't remove the scenarios - they are remembered unless explicitly closed
+	}
+	
+	private void addToScenarioService(Scenario scenario) {
+		RiskEngine.getScenarioService().addScenario(scenario.getName(), scenario);
+	}
+	
+	private void removeFromScenarioService(Scenario scenario) {
+		RiskEngine.getScenarioService().removeScenario(scenario.getName());
 	}
 }

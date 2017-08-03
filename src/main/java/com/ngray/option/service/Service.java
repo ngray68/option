@@ -147,6 +147,13 @@ public class Service<K, V> {
 		notifyListeners(key);
 	}
 	
+	public void unpublishData(K key) {
+		Log.getLogger().info("Service " + getName() + ": unpublishData Key: " + key);
+		cache.remove(key);
+		// we can do this because getListeners returns a copy of the list
+		getListeners(key).forEach(listener -> removeListener(key, listener));
+	}
+	
 	/**
 	 * Start the service
 	 */

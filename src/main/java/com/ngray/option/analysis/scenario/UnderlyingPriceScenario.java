@@ -53,9 +53,17 @@ public class UnderlyingPriceScenario implements Scenario {
 	private ScenarioResult scenarioResult;
 	
 
-	public UnderlyingPriceScenario(String name,  ScenarioDefinition definition, LocalDate valueDate) {
+	public UnderlyingPriceScenario(ScenarioDefinition definition, LocalDate valueDate) {
+		
+		if (definition.getInstrument().getIGMarket() != null) {
+			this.name = definition.getInstrument().getName() + " " +
+					    definition.getInstrument().getIGMarket().getExpiry() + " " +
+					    definition.getBaseValue() + "-" + definition.getIncrement() + "-" + definition.getRange();
+		} else {
+			this.name = definition.getInstrument().getIdentifier() + " " + 
+					    definition.getBaseValue() + "-" + definition.getIncrement() + "-" + definition.getRange();
+		}
 		Log.getLogger().info("Creating scenario " + name);
-		this.name= name;
 		this.scenarioDefinition = definition;
 		this.basePositions = new ArrayList<>(RiskEngine.getPositionService().getPositions(scenarioDefinition.getInstrument()));
 		this.valueDate = valueDate;
@@ -65,7 +73,7 @@ public class UnderlyingPriceScenario implements Scenario {
 	public String getName() {
 		return name;
 	}
-
+	
 	@Override
 	public List<Position> getBasePositions() {
 		return Collections.unmodifiableList(basePositions);

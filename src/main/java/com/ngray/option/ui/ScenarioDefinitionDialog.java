@@ -218,18 +218,10 @@ public class ScenarioDefinitionDialog {
 	
 	private void runScenario() {
 		// run the scenario over each position in the selected underlying
-		FinancialInstrument selectedUnderlying = scenarioDefinition.getInstrument();
-		String scenarioName = null;
-		if (selectedUnderlying.getIGMarket() == null) {
-			scenarioName = selectedUnderlying.getIdentifier();
-		} else {
-			scenarioName = selectedUnderlying.getIGMarket().getInstrumentName() + " " + selectedUnderlying.getIGMarket().getExpiry();
-		}
-		
 		Scenario scenario = null;
 		if (scenarioDefinition.getType() == Type.UNDERLYING) {
 			// the scenario definition is owned by this dialog so we pass a copy to the actual scenario
-			scenario = new UnderlyingPriceScenario(scenarioName, scenarioDefinition.copy(), LocalDate.now());
+			scenario = new UnderlyingPriceScenario(scenarioDefinition.copy(), LocalDate.now());
 			scenario.evaluate();
 			// display the results
 			if (parentUI.getScenarioView() == null) {

@@ -5,12 +5,15 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import com.ngray.option.Log;
 import com.ngray.option.analysis.scenario.Scenario;
+import com.ngray.option.analysis.scenario.ScenarioListener;
+import com.ngray.option.analysis.scenario.ScenarioService;
 import com.ngray.option.position.Position;
 import com.ngray.option.ui.ScenarioView.RiskMeasure;
 
 @SuppressWarnings("serial")
-public class ScenarioTableModel extends AbstractTableModel {
+public class ScenarioTableModel extends AbstractTableModel implements ScenarioListener {
 
 	private final RiskMeasure riskMeasure;
 	
@@ -125,5 +128,16 @@ public class ScenarioTableModel extends AbstractTableModel {
 	public String getColumnName(int col) {	
 		return columnNames[col].toString();
     }
+
+	@Override
+	public void onUpdate(String key, Scenario scenario) {
+		Log.getLogger().debug("ScenarioTableModel::onUpdate called for scenario " + key);
+		if (scenario.getName() == this.scenario.getName()) {
+			// we reconstruct the whole table
+			Log.getLogger().debug("Updating ScenarioTableModel for scenario " + key);
+			initialize();
+			fireTableDataChanged();
+		}
+	}
 
 }
