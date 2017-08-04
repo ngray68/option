@@ -15,6 +15,7 @@ import javax.swing.event.DocumentListener;
 
 import com.ngray.option.Log;
 import com.ngray.option.RiskEngine;
+import com.ngray.option.analysis.scenario.ImpliedVolatilityScenario;
 import com.ngray.option.analysis.scenario.Scenario;
 import com.ngray.option.analysis.scenario.ScenarioDefinition;
 import com.ngray.option.analysis.scenario.ScenarioDefinition.Type;
@@ -186,7 +187,8 @@ public class ScenarioDefinitionDialog {
 	private void onEditIncrement() {
 		Log.getLogger().debug("ScenarioDefinitionDialog::onEditIncrement");
 		double incValue = Double.parseDouble(increment.getText());
-		scenarioDefinition.setIncrement(incValue);		validate();
+		scenarioDefinition.setIncrement(incValue);		
+		validate();
 	}
 	
 	private void onEditRange() {
@@ -222,18 +224,17 @@ public class ScenarioDefinitionDialog {
 		if (scenarioDefinition.getType() == Type.UNDERLYING) {
 			// the scenario definition is owned by this dialog so we pass a copy to the actual scenario
 			scenario = new UnderlyingPriceScenario(scenarioDefinition.copy(), LocalDate.now());
-			scenario.evaluate();
-			// display the results
-			if (parentUI.getScenarioView() == null) {
-				parentUI.setScenarioView(new ScenarioView(parentUI));	
-			}
-			parentUI.getScenarioView().addScenario(scenario);
-			parentUI.getScenarioView().show();
 		} else {
-			// TODO - IMPLIED VOL Scenario
-			// for now we just return
-			return;
+			scenario = new ImpliedVolatilityScenario(scenarioDefinition.copy(), LocalDate.now());		
 		}
+		
+		// display the results
+		scenario.evaluate();
+		if (parentUI.getScenarioView() == null) {
+			parentUI.setScenarioView(new ScenarioView(parentUI));	
+		}
+		parentUI.getScenarioView().addScenario(scenario);
+		parentUI.getScenarioView().show();
 	}
 	
 	// Adapter to simplify listeners for text fields
@@ -282,5 +283,4 @@ public class ScenarioDefinitionDialog {
 				return "";
 			}
 		}
-
 }

@@ -12,21 +12,14 @@ import com.ngray.option.financialinstrument.FinancialInstrument;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.marketdata.MarketData;
 import com.ngray.option.marketdata.MarketDataCollection;
-import com.ngray.option.model.ModelException;
 import com.ngray.option.marketdata.MarketData.Type;
+import com.ngray.option.model.ModelException;
 import com.ngray.option.position.Position;
 import com.ngray.option.risk.Risk;
 
-/**
- * Calculates the effect on risk and P&L of changes in the underlying price
- *for all live positions on that underlying
- * @author nigelgray
- *
- */
-public class UnderlyingPriceScenario extends AbstractScenario {
-	
-	
-	public UnderlyingPriceScenario(ScenarioDefinition definition, LocalDate valueDate) {
+public class ImpliedVolatilityScenario extends AbstractScenario {
+
+	public ImpliedVolatilityScenario(ScenarioDefinition definition, LocalDate valueDate) {
 		super(definition, valueDate);
 	}
 	
@@ -64,14 +57,14 @@ public class UnderlyingPriceScenario extends AbstractScenario {
 	private List<MarketDataCollection> getPerturbedMarketData(Position basePosition) {
 		List<MarketDataCollection> marketDataCollectionList = new ArrayList<>();
 		
-		double constantImpliedVolatility = basePosition.getPositionRisk().getImpliedVolatility();
-		double[] underlyingPrices = scenarioDefinition.getValues();
-		for (double underlyingPrice : underlyingPrices) {
+		double constantUnderlyingPrice = basePosition.getPositionRisk().getUnderlyingPrice();
+		double[] vols = scenarioDefinition.getValues();
+		for (double vol : vols) {
 			Map<FinancialInstrument, MarketData> map = new HashMap<>();
 			FinancialInstrument instrument = scenarioDefinition.getInstrument();
-			map.put(instrument, new MarketData(instrument.getIdentifier(), underlyingPrice, Type.PRICE));
+			map.put(instrument, new MarketData(instrument.getIdentifier(), constantUnderlyingPrice, Type.PRICE));
 			if (basePosition.getInstrument() instanceof EuropeanOption) {
-				map.put(basePosition.getInstrument(), new MarketData(basePosition.getInstrument().getIdentifier(), constantImpliedVolatility, Type.VOLATILITY));
+				map.put(basePosition.getInstrument(), new MarketData(basePosition.getInstrument().getIdentifier(), vol, Type.VOLATILITY));
 			}
 			marketDataCollectionList.add(new MarketDataCollection(map));
 		}

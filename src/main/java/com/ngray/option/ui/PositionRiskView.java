@@ -1,6 +1,7 @@
 package com.ngray.option.ui;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.beans.PropertyVetoException;
 import java.util.Set;
@@ -26,6 +27,9 @@ import com.ngray.option.position.Position;
  *
  */
 public class PositionRiskView {
+	
+	public static final int DEFAULT_WIDTH = 1000;
+	public static final int DEFAULT_HEIGHT = 200;
 	
 	/**
 	 * The parent UI which supplies the frame and content pane
@@ -93,7 +97,8 @@ public class PositionRiskView {
 	public void onPositionInNewUnderlying(Position position) {
 		//TODO: check that a model/JInternalFrame for the underlying doesn't already exist
 		Log.getLogger().debug("Creating position table for new underlying");
-		createPositionTable(position.getUnderlying());
+		parentInternalFrame.add(createPositionTable(position.getUnderlying()));
+		parentInternalFrame.pack();
 	}
 	
 	/**
@@ -130,6 +135,7 @@ public class PositionRiskView {
 			}
 		};
 		JInternalFrame frame = Frames.createJInternalFrame(underlying.getName() + " " + underlying.getIGMarket().getExpiry(), listener, pane);
+		frame.setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 		return frame;
 	}
 	

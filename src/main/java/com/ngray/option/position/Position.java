@@ -86,6 +86,22 @@ public class Position {
 		this.timestamp = LocalTime.now();
 	}
 	
+	/**
+	 * 	Private copy constructor used by the copy method
+	 * @param rhs
+	 */
+	private Position(Position rhs) {
+		this.id = rhs.getId();
+		this.instrument = rhs.getInstrument();
+		this.positionSize = rhs.getPositionSize();
+		this.open = rhs.getOpen();
+		this.latest = rhs.getLatest();
+		this.positionPnL = rhs.getPositionPnL();
+		this.positionRisk = rhs.getPositionRisk();
+		this.igPosition = rhs.getIgPosition();
+		this.timestamp = rhs.getTimestamp();
+	}
+	
 	private void initializeRisk() {
 		if (igPosition != null) {
 			Log.getLogger().info("Position: " + getId() + " initializing risk...");
@@ -283,12 +299,7 @@ public class Position {
 
 
 	public Position copy() throws MissingReferenceDataException {
-		if (getIgPosition() != null) {
-			return new Position(getIgPosition());
-		} else {
-			return new Position(getId(), getInstrument(), getPositionSize(), getOpen());
-		}
-				
+		return new Position(this);
 	}
 
 	

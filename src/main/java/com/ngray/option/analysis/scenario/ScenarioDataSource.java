@@ -50,18 +50,19 @@ public class ScenarioDataSource implements ServiceDataSource<String, Scenario> {
 
 				@Override
 				public void onPositionPnLUpdate(Position position) {
-					scenario.evaluate();
-					publisher.publish(key, scenario);
+					// not required
 				}
 
 				@Override
 				public void onOpenPosition(Position position) {
+					scenario.addBasePosition(position);
 					scenario.evaluate();
 					publisher.publish(key, scenario);
 				}
 
 				@Override
 				public void onDeletePosition(Position position) {
+					scenario.removeBasePosition(position);
 					scenario.evaluate();
 					publisher.publish(key, scenario);
 					

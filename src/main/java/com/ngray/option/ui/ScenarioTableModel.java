@@ -7,8 +7,8 @@ import javax.swing.table.AbstractTableModel;
 
 import com.ngray.option.Log;
 import com.ngray.option.analysis.scenario.Scenario;
+import com.ngray.option.analysis.scenario.ScenarioDefinition.Type;
 import com.ngray.option.analysis.scenario.ScenarioListener;
-import com.ngray.option.analysis.scenario.ScenarioService;
 import com.ngray.option.position.Position;
 import com.ngray.option.ui.ScenarioView.RiskMeasure;
 
@@ -33,16 +33,20 @@ public class ScenarioTableModel extends AbstractTableModel implements ScenarioLi
 	private void initialize() {
 		int rows = scenario.getBasePositions().size() + 1;  // +1 for total
 		int cols = scenario.getDefinition().getValues().length + 2;
+		
+		data = new Object[rows][cols];
+		Object[] total = new Object[cols];
+		total[0] = "Total";
+		total[1] = "";
+	
 		columnNames = new Object[scenario.getDefinition().getValues().length + 2];
 		columnNames[0] = "Last Update";
 		columnNames[1] = "Id";
 		for (int i = 2; i < columnNames.length; ++i) {
 			columnNames[i] = scenario.getDefinition().getValues()[i-2];
+			total[i] = 0.0;
 		}
-		data = new Object[rows][cols];
-		Object[] total = new Object[cols];
-		total[0] = "Total";
-		total[1] = "";
+		
 		int i = 0;
 		for (Position basePosition : scenario.getBasePositions()) {
 			int j = 2;
@@ -51,7 +55,7 @@ public class ScenarioTableModel extends AbstractTableModel implements ScenarioLi
  			List<Position> results = scenario.getScenarioResult().getPerturbedPosition(basePosition);
 			for (Position perturbedPosition : results) {
 				data[i][j] = getRiskMeasure(perturbedPosition);
-				if (total[j] == null) {
+				if (Double.compare((double)total[j], 0.0) == 0) {
 					total[j] = (double)data[i][j];
 				} else {
 					total[j] = (double)total[j] + (double)data[i][j];
@@ -125,8 +129,19 @@ public class ScenarioTableModel extends AbstractTableModel implements ScenarioLi
 	}
 
 	@Override
-	public String getColumnName(int col) {	
-		return columnNames[col].toString();
+	public String getColumnName(int col) {
+		if (col < 2) {
+			return columnNames[col].toString();
+		}
+		
+		if (scenario.getDefinition().getType() == Type.UNDERLYING) {
+			return columnNames[col].toString();
+		} else {
+			NumberFormat formatter = NumberFormat.getPercentInstance();
+			formatter.setMinimumFractionDigits(2);
+			formatter.setMaximumFractionDigits(2);
+			return formatter.format(columnNames[col]);
+		}	
     }
 
 	@Override

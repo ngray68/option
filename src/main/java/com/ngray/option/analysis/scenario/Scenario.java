@@ -40,9 +40,22 @@ public interface Scenario {
 	public List<Position> getBasePositions();
 	
 	/**
+	 * Add the position to the base positions list
+	 * @param position
+	 */
+	public void addBasePosition(Position position);
+	
+	/**
+	 * Remove the position from the base positions list
+	 * @param position
+	 */
+	public void removeBasePosition(Position position);
+	
+	/**
 	 * Get the scenario result object previously calculated by evaluate()
 	 * @return
 	 */
 	public ScenarioResult getScenarioResult();
+	
 
 }
