@@ -85,7 +85,7 @@ public class ScenarioDefinition {
 		for (int i = 0; i < numValues; ++i) {
 			values[i] = value;
 			value+=increment;
-			//if (Double.compare(value, max) > 0) break;
+			//if (Double.compare(value, max) > 0) break; 
 		}
 		
 		return values;
