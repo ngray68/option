@@ -25,12 +25,14 @@ public class ImpliedVolatilityScenario extends AbstractScenario {
 	
 	@Override
 	public ScenarioResult evaluate() {
-		scenarioResult = new ScenarioResult();
-		basePositions.forEach(
-				basePosition -> scenarioResult.addPerturbedPositions(basePosition, getPerturbedPositions(basePosition))
-			);
+		synchronized(lock) {
+			scenarioResult = new ScenarioResult();
+			basePositions.forEach(
+					basePosition -> scenarioResult.addPerturbedPositions(basePosition, getPerturbedPositions(basePosition))
+					);
 		
-		return scenarioResult;
+			return scenarioResult;
+		}
 	}
 	
 	private List<Position> getPerturbedPositions(Position basePosition) {

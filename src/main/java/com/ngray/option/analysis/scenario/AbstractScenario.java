@@ -36,7 +36,12 @@ public abstract class AbstractScenario implements Scenario {
 	 */
 	protected ScenarioResult scenarioResult;
 	
-
+	/**
+	 * synchronize access to the modifiable elements of the Scenario - updates to positions might come from different threads
+	 * than risk/pnl updates
+	 */
+	protected Object lock = new Object();
+	
 	public AbstractScenario(ScenarioDefinition definition, LocalDate valueDate) {
 		
 		if (definition.getInstrument().getIGMarket() != null) {
@@ -62,7 +67,9 @@ public abstract class AbstractScenario implements Scenario {
 	
 	@Override
 	public List<Position> getBasePositions() {
-		return Collections.unmodifiableList(basePositions);
+		synchronized(lock) {
+			return Collections.unmodifiableList(new ArrayList<>(basePositions));
+		}
 	}
 
 	@Override
@@ -77,18 +84,24 @@ public abstract class AbstractScenario implements Scenario {
 	
 	@Override
 	public void addBasePosition(Position position) {
-		if (basePositions.contains(position)) return;
-		basePositions.add(position);
+		synchronized(lock) {
+			if (basePositions.contains(position)) return;
+			basePositions.add(position);
+		}
 	}
 
 	@Override
 	public void removeBasePosition(Position position) {
-		basePositions.remove(position);
+		synchronized(lock) {
+			basePositions.remove(position);
+		}
 	}
 
 	@Override
 	public ScenarioResult getScenarioResult() {
-		return scenarioResult;
+		synchronized(lock) {
+			return scenarioResult;
+		}
 	}
 
 	protected double getSpread(Position position) {

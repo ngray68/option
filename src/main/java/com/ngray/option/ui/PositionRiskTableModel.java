@@ -290,6 +290,7 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 						formatter.setMaximumFractionDigits(2);
 						return formatter.format(data[rowIndex][columnIndex]);
 					case IV_COL:
+					case GAMMA_COL:
 						formatter = NumberFormat.getPercentInstance();
 						formatter.setMinimumFractionDigits(1);
 						formatter.setMaximumFractionDigits(2);
@@ -304,12 +305,16 @@ public class PositionRiskTableModel extends AbstractTableModel implements Positi
 				switch (columnIndex) {		
 					case PNL_COL:
 					case DELTA_COL:
-					case GAMMA_COL:
 					case VEGA_COL:
 					case THETA_COL:
 					case RHO_COL:
 						formatter = NumberFormat.getNumberInstance();
 						formatter.setMinimumFractionDigits(2);
+						formatter.setMaximumFractionDigits(2);
+						return formatter.format(data[rowIndex][columnIndex]);
+					case GAMMA_COL:
+						formatter = NumberFormat.getPercentInstance();
+						formatter.setMinimumFractionDigits(1);
 						formatter.setMaximumFractionDigits(2);
 						return formatter.format(data[rowIndex][columnIndex]);
 					default:
