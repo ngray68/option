@@ -102,7 +102,7 @@ public class RiskEngine {
 			positionService.initialize();
 			
 			// Create without a data source for now - will add when we do live updates
-			scenarioService = new ScenarioService("ScenarioService-LIVE", new ScenarioDataSource("ScenarioDataSource-LIVE", positionService));
+			scenarioService = new ScenarioService("LIVE", new ScenarioDataSource("ScenarioDataSource-LIVE", positionService));
 			
 			new MainUI().show();
 			Runtime.getRuntime().addShutdownHook(new Thread() {

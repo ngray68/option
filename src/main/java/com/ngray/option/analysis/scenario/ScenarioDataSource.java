@@ -32,7 +32,7 @@ public class ScenarioDataSource implements ServiceDataSource<String, Scenario> {
 
 	@Override
 	public void addSubscription(String key, ServiceDataPublisher<String, Scenario> publisher) {
-		Log.getLogger().info("ScenarioDataSource: add subscription for " + key);
+		Log.getLogger().info("ScenarioDataSource " + name + ": add subscription for " + key);
 		try {
 			if (subscriptions.containsKey(key)) {
 				Log.getLogger().info("Already subscribed to data source for scenario " + key  + ": ignoring subscription request");
@@ -40,7 +40,7 @@ public class ScenarioDataSource implements ServiceDataSource<String, Scenario> {
 			}
 			
 			Scenario scenario = getScenarioService().getData(key);
-			positionService.addListener(scenario.getDefinition().getInstrument(), new PositionListener() {
+			PositionListener listener = new PositionListener() {
 
 				@Override
 				public void onPositionRiskUpdate(Position position) {
@@ -73,7 +73,10 @@ public class ScenarioDataSource implements ServiceDataSource<String, Scenario> {
 					scenario.evaluate();
 					publisher.publish(key, scenario);
 				}
-			});
+			};
+			
+			positionService.addListener(scenario.getDefinition().getInstrument(), listener);
+			subscriptions.put(scenario.getName(), listener);
 		} catch (ServiceException e) {
 			Log.getLogger().error(e.getMessage(), e);
 		}
@@ -82,13 +85,13 @@ public class ScenarioDataSource implements ServiceDataSource<String, Scenario> {
 
 	@Override
 	public void removeSubscription(String key) {
-		Log.getLogger().info("ServiceDataSource" + name + ": removing subscription for scenario " + key);
+		Log.getLogger().info("ScenarioDataSource " + name + ": removing subscription for scenario " + key);
 		PositionListener listener = subscriptions.remove(key);
 		if (listener != null) {
 			removePositionListener(key, listener);
-		}
-	}
-
+		 }
+	} 
+     
 	@Override
 	public void start() {
 		// do nothing
@@ -96,7 +99,7 @@ public class ScenarioDataSource implements ServiceDataSource<String, Scenario> {
 
 	@Override
 	public void shutdown() {
-		Log.getLogger().info("ServiceDataSource" + name + ": shutdown...");
+		Log.getLogger().info("ScenarioDataSource " + name + ": shutdown...");
 		subscriptions.forEach((key, subscription) -> removePositionListener(key, subscription));
 		subscriptions.clear();
 	}

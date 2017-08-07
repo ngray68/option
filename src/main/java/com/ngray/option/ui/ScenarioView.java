@@ -94,6 +94,7 @@ public class ScenarioView {
 		InternalFrameListener listener = new InternalFrameAdapter() {
 			@Override
 			public void internalFrameClosed(InternalFrameEvent e) {
+				removeFromScenarioService(scenario);				
 				e.getInternalFrame().removeInternalFrameListener(this);
 				parentInternalFrame.remove(e.getInternalFrame());	
 			}
