@@ -54,6 +54,4 @@ public class TestSession {
 		IGPositionList posList = session.getPositions();
 		assertTrue(posList != null);
 	}
-	
-
 }

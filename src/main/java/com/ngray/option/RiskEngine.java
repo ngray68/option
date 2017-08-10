@@ -5,6 +5,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.ngray.option.analysis.scenario.ScenarioDataSource;
 import com.ngray.option.analysis.scenario.ScenarioService;
 import com.ngray.option.ig.Session;
@@ -13,6 +18,7 @@ import com.ngray.option.ig.SessionLoginDetails;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.ig.stream.StreamManager;
 import com.ngray.option.marketdata.MarketDataService;
+import com.ngray.option.mongo.VolatilitySurfaceDefinitionCodec;
 import com.ngray.option.position.PositionService;
 import com.ngray.option.position.PositionUpdateService;
 import com.ngray.option.risk.RiskService;
@@ -32,6 +38,7 @@ public class RiskEngine {
 	private static Object waitLock = new Object();
 	private static PositionUpdateService positionUpdateService = null;
 	private static ScenarioService scenarioService = null;
+	private static MongoClient mongoClient = null;
 	
 	private static String readFile(String fileName) throws IOException {
 		String result = "";
@@ -104,6 +111,16 @@ public class RiskEngine {
 			// Create without a data source for now - will add when we do live updates
 			scenarioService = new ScenarioService("LIVE", new ScenarioDataSource("ScenarioDataSource-LIVE", positionService));
 			
+			// TODO mongo authentication credentials
+			CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+					MongoClient.getDefaultCodecRegistry(),
+					CodecRegistries.fromCodecs(new VolatilitySurfaceDefinitionCodec(MongoClient.getDefaultCodecRegistry()))
+				);
+			 MongoClientOptions options = MongoClientOptions.builder().codecRegistry(codecRegistry)
+			            .build();
+
+			mongoClient = new MongoClient("localhost:27017", options);
+			
 			new MainUI().show();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 
@@ -158,5 +175,40 @@ public class RiskEngine {
 	 */
 	public static ScenarioService getScenarioService() {
 		return scenarioService;
+	}
+	
+	/**
+	 * Get the mongoclient instance
+	 * @return
+	 */
+	public static MongoClient getMongoClient() {
+		return mongoClient;
+	}
+	
+	/**
+	 * Get the IG session
+	 * @return
+	 */
+	public static Session getSession() {
+		return session;
+	}
+	
+	// The following methods are used to inject test instances of RiskEngine resources for use in
+	// JUnit tests where a full RiskEngine instance isn't required and PowerMockito doesn't work with
+	// eg HTTP or Mongo.
+	/**
+	 * Set the test IG session
+	 * @param session
+	 */
+	public static void setTestSession(Session thisSession) {
+		session = thisSession;
+	}
+	
+	/**
+	 * Set the test mongo client instance
+	 * @param thisClient
+	 */
+	public static void setTestMongoClient(MongoClient thisClient) {
+		mongoClient = thisClient;
 	}
 }
