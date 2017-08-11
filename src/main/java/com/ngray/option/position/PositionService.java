@@ -40,7 +40,7 @@ public class PositionService {
 	
 	private final Map<String, List<PositionListener>> listeners = new HashMap<>();
 	
-	private final Map<FinancialInstrument, PositionListener> listenersByUnderlying = new HashMap<>();
+	private final Map<FinancialInstrument, List<PositionListener>> listenersByUnderlying = new HashMap<>();
 	
 	private final Session session;
 	
@@ -185,11 +185,12 @@ public class PositionService {
 			notifyDeletePositionListeners(deletedPosition);
 			unsubscribeFromMarketDataService(deletedPosition, marketDataService);
 			unsubscribeFromRiskService(deletedPosition, riskService);
-			
+			/*
 			PositionListener positionListener = getListener(deletedPosition.getUnderlying());
 			if (positionListener != null) {
 				removeListener(deletedPosition, positionListener);
-			} 
+			} */
+			removeAllListeners(deletedPosition);
 		}
 	}
 	
@@ -206,7 +207,19 @@ public class PositionService {
 				positions.put(dealId, newPosition);
 			}
 			
-			PositionListener positionListener = getListener(newPosition.getUnderlying());
+			synchronized(listenerLock) {
+				List<PositionListener> positionListeners = getListeners(newPosition.getUnderlying());
+				// if its a new underlying, by definition there will be no pre-existing listeners
+				if(positionListeners.isEmpty()) {
+					if (getView() != null) {
+						getView().onPositionInNewUnderlying(newPosition);
+					}
+				} else {
+					positionListeners.forEach(listener -> addListener(newPosition, listener));
+				}		
+			}
+			
+			/*PositionListener positionListener= getListener(newPosition.getUnderlying());
 			if (positionListener != null) {
 				addListener(newPosition, positionListener);
 				notifyOpenPositionListeners(newPosition);
@@ -216,7 +229,7 @@ public class PositionService {
 				}
 				// NG we mustn't separately notify open position listeners as this will result in a double entry in
 				// the UI. Think about how to make this more robust
-			}
+			}*/
 			
 			subscribeToMarketDataService(newPosition, marketDataService);
 			subscribeToRiskService(newPosition, riskService);	
@@ -355,9 +368,23 @@ public class PositionService {
 		return listener;
 	}
 	
+	public void removeAllListeners(Position position) {
+		if	(position == null) return;
+		
+		Log.getLogger().info("PositionService " + getName() + ": removing all subscriptions for " + position.getId());
+		
+		synchronized(listenerLock) {
+			if (listeners.containsKey(position.getId())) {
+				listeners.get(position.getId()).clear();
+				listeners.remove(position.getId());
+			}
+		}
+	}
+	
 	public void removeListener(Position position, PositionListener listener) {
-		Log.getLogger().info("PositionService " + getName() + ": removing subscription for " + position.getId());
 		if(position == null || listener == null) return;
+	
+		Log.getLogger().info("PositionService " + getName() + ": removing subscription for " + position.getId());
 		
 		synchronized(listenerLock) {
 			if (listeners.containsKey(position.getId())) {
@@ -471,14 +498,17 @@ public class PositionService {
 	
 	public void addListener(FinancialInstrument underlying, PositionListener listener) {
 		synchronized(listenerLock) {
-			listenersByUnderlying.put(underlying, listener);
+			if (!listenersByUnderlying.containsKey(underlying)) {
+				listenersByUnderlying.put(underlying, new ArrayList<>());
+			}
+			listenersByUnderlying.get(underlying).add(listener);
 			getPositions(underlying).forEach(position -> addListener(position, listener));
 		}
 	}
 	
-	public PositionListener getListener(FinancialInstrument underlying) {
+	private List<PositionListener> getListeners(FinancialInstrument underlying) {
 		synchronized(listenerLock) {
-			return listenersByUnderlying.get(underlying);
+			return listenersByUnderlying.getOrDefault(underlying, new ArrayList<>());
 		}
 	}
 

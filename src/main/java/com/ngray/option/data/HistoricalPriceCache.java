@@ -45,14 +45,40 @@ public class HistoricalPriceCache {
 	
 	/**
 	 * Return the price for the given security identifier on the given value date.
-	 * Returns null if no price is present  in the cache
+	 * Returns null if no price is present.
+	 * Equivalent to getPrice(valueDate, identifier, false) ie. no read-through
 	 * @param valueDate
 	 * @param identifier
 	 * @return
 	 */
 	public Price getPrice(LocalDate valueDate, String identifier) {
+		return getPrice(valueDate, identifier, false);
+	}
+	
+	/**
+	 * Return the price for the given security identifier on the given value date.
+	 * Returns null if no price is present  in the cache, and read through fails. Read through to Mongo (and IG)
+	 * if not cached, cache the value and return it.
+	 * @param valueDate
+	 * @param identifier
+	 * @param readThrough
+	 * @return
+	 */
+	public Price getPrice(LocalDate valueDate, String identifier, boolean readThrough) {
 		Map<String, Price> pricesOnValueDate = cache.getOrDefault(valueDate, new TreeMap<>());
-		return pricesOnValueDate.get(identifier);
+		if (pricesOnValueDate.containsKey(identifier)) {
+			return pricesOnValueDate.get(identifier);
+		}
+		
+		// read through
+		if (readThrough) {
+			Set<String> ids = new TreeSet<>();
+			ids.add(identifier);
+			load(valueDate, valueDate, ids);
+			return getPrice(valueDate, identifier, false);
+		}
+		
+		return null;
 	}
 	
 	public void load(LocalDate startDate, LocalDate endDate, Set<String> identifiers) {

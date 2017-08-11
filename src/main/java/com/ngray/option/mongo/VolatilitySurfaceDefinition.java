@@ -85,7 +85,7 @@ public class VolatilitySurfaceDefinition {
 	public String getOptionEpicForm(String underlyingEpic) {
 		// optionEpic map is keyed by the index of the underlyingEpic in the underlyingEpic list
 		// due to mongo restrictions on dots in keys
-		return optionEpicForm.get(underlyingEpics.indexOf(underlyingEpic));
+		return optionEpicForm.get(Integer.toString(underlyingEpics.indexOf(underlyingEpic)));
 	}
 
 	public List<String> getUnderlyingEpics() {

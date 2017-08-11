@@ -12,6 +12,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.ngray.option.analysis.scenario.ScenarioDataSource;
 import com.ngray.option.analysis.scenario.ScenarioService;
+import com.ngray.option.data.HistoricalPriceCache;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
@@ -39,6 +40,7 @@ public class RiskEngine {
 	private static PositionUpdateService positionUpdateService = null;
 	private static ScenarioService scenarioService = null;
 	private static MongoClient mongoClient = null;
+	private static HistoricalPriceCache priceCache = null;
 	
 	private static String readFile(String fileName) throws IOException {
 		String result = "";
@@ -99,6 +101,8 @@ public class RiskEngine {
 			String lightStreamerEndpoint = session.getSessionInfo().getLightStreamerEndpoint();
 			String xst = session.getXSecurityToken();
 			String cst = session.getClientSecurityToken();
+			
+			priceCache = new HistoricalPriceCache("RiskEngine");
 			
 			StreamManager streamManager = new StreamManager(lightStreamerEndpoint, activeAccountId, cst, xst);
 			marketDataService = new MarketDataService("MarketData-LIVE", streamManager.getLivePriceStream());
@@ -193,6 +197,14 @@ public class RiskEngine {
 		return session;
 	}
 	
+	/**
+	 * Get the historical price cache
+	 * @return
+	 */
+	public static HistoricalPriceCache getHistoricalPriceCache() {
+		return priceCache ;
+	}
+	
 	// The following methods are used to inject test instances of RiskEngine resources for use in
 	// JUnit tests where a full RiskEngine instance isn't required and PowerMockito doesn't work with
 	// eg HTTP or Mongo.
@@ -210,5 +222,13 @@ public class RiskEngine {
 	 */
 	public static void setTestMongoClient(MongoClient thisClient) {
 		mongoClient = thisClient;
+	}
+
+	/**
+	 * Set the test price cache
+	 * @param cache
+	 */
+	public static void setHistoricalPriceCache(HistoricalPriceCache cache) {
+		priceCache = cache;
 	}
 }

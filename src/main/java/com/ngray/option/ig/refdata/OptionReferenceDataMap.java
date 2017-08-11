@@ -166,4 +166,9 @@ public class OptionReferenceDataMap {
 		}
 		return node.getMarkets();
 	}
+
+	public static List<OptionReferenceData> getOptionReferenceDataForUnderlying(String underlyingEpic) {
+		Security security = new Security(underlyingEpic);
+		return getOptionReferenceData(security);
+	}
 }
