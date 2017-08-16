@@ -2,6 +2,7 @@ package com.ngray.option.financialinstrument;
 
 import java.time.LocalDate;
 
+import com.ngray.option.financialinstrument.EuropeanOption.Type;
 import com.ngray.option.ig.market.Market;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.ig.refdata.OptionReferenceData;
@@ -24,7 +25,13 @@ public class EuropeanOption extends FinancialInstrument {
 	
 	public enum Type {
 		CALL,
-		PUT
+		PUT;
+
+		public static Type fromString(String string) {
+			if ("CALL".equals(string)) return CALL;
+			if ("PUT".equals(string)) return PUT;
+			return null;
+		}
 	};
 	
 	/**

@@ -13,7 +13,7 @@ import com.ngray.option.financialinstrument.EuropeanOption;
  * @author nigelgray
  *
  */
-public class VolatilitySurfaceDefinition {
+public class VolatilitySurfaceDefinition implements MongoObject{
 	
 	/**
 	 * The name for this definition
@@ -102,5 +102,21 @@ public class VolatilitySurfaceDefinition {
 
 	public String getName() {
 		return name;
+	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
+
+
+	@Override
+	public String getUniqueId() {
+		return name + ":" + validFrom + ":" + validTo;
+	}
+	
+	@Override
+	public String getCollectionName() {
+		return MongoConstants.VOLATILITY_SURFACE_DEFINITION_COLLECTION;
 	}
 }

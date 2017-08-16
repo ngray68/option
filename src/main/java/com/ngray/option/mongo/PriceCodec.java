@@ -22,6 +22,7 @@ public class PriceCodec implements Codec<Price> {
 	@Override
 	public void encode(BsonWriter writer, Price price, EncoderContext context) {
 		Document document = new Document();
+		document.put("UniqueId", price.getUniqueId());
 		document.put("Id", price.getId());
 		document.put("ValueDate", price.getValueDate().toString());
 		document.put("Open", price.getOpen());

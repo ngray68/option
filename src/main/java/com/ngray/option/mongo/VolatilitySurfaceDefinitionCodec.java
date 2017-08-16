@@ -27,6 +27,7 @@ public class VolatilitySurfaceDefinitionCodec implements Codec<VolatilitySurface
 	@Override
 	public void encode(BsonWriter writer, VolatilitySurfaceDefinition volatilitySurfaceDefinition, EncoderContext context) {
 		Document document = new Document();
+		document.put("UniqueId", volatilitySurfaceDefinition.getUniqueId());
 		document.put("Name", volatilitySurfaceDefinition.getName());
 		document.put("ValidFrom", volatilitySurfaceDefinition.getValidFrom().toString());
 		document.put("ValidTo", volatilitySurfaceDefinition.getValidTo().toString());

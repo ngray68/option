@@ -19,6 +19,8 @@ import com.ngray.option.ig.SessionLoginDetails;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.ig.stream.StreamManager;
 import com.ngray.option.marketdata.MarketDataService;
+import com.ngray.option.mongo.Mongo;
+import com.ngray.option.mongo.PriceCodec;
 import com.ngray.option.mongo.VolatilitySurfaceDefinitionCodec;
 import com.ngray.option.position.PositionService;
 import com.ngray.option.position.PositionUpdateService;
@@ -39,7 +41,7 @@ public class RiskEngine {
 	private static Object waitLock = new Object();
 	private static PositionUpdateService positionUpdateService = null;
 	private static ScenarioService scenarioService = null;
-	private static MongoClient mongoClient = null;
+	//private static MongoClient mongoClient = null;
 	private static HistoricalPriceCache priceCache = null;
 	
 	private static String readFile(String fileName) throws IOException {
@@ -115,15 +117,19 @@ public class RiskEngine {
 			// Create without a data source for now - will add when we do live updates
 			scenarioService = new ScenarioService("LIVE", new ScenarioDataSource("ScenarioDataSource-LIVE", positionService));
 			
+			Mongo.initialize();
 			// TODO mongo authentication credentials
+			/*
 			CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 					MongoClient.getDefaultCodecRegistry(),
-					CodecRegistries.fromCodecs(new VolatilitySurfaceDefinitionCodec(MongoClient.getDefaultCodecRegistry()))
+					CodecRegistries.fromCodecs(new VolatilitySurfaceDefinitionCodec(MongoClient.getDefaultCodecRegistry())),
+					CodecRegistries.fromCodecs(new PriceCodec(MongoClient.getDefaultCodecRegistry()))
 				);
 			 MongoClientOptions options = MongoClientOptions.builder().codecRegistry(codecRegistry)
 			            .build();
 
 			mongoClient = new MongoClient("localhost:27017", options);
+			*/
 			
 			new MainUI().show();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -185,9 +191,10 @@ public class RiskEngine {
 	 * Get the mongoclient instance
 	 * @return
 	 */
+	/*
 	public static MongoClient getMongoClient() {
 		return mongoClient;
-	}
+	}*/
 	
 	/**
 	 * Get the IG session
@@ -220,9 +227,10 @@ public class RiskEngine {
 	 * Set the test mongo client instance
 	 * @param thisClient
 	 */
+	/*
 	public static void setTestMongoClient(MongoClient thisClient) {
 		mongoClient = thisClient;
-	}
+	}*/
 
 	/**
 	 * Set the test price cache

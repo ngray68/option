@@ -22,6 +22,7 @@ import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.price.IGPriceSnapshot;
 import com.ngray.option.ig.price.IGPriceSnapshotSequence;
 import com.ngray.option.ig.price.IGPriceSnapshotSequence.Resolution;
+import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.MongoConstants;
 import com.ngray.option.mongo.Price;
 
@@ -129,8 +130,10 @@ public class HistoricalPriceCache {
 						}
 					    Price price = new Price(id, valueDate, historicalPrice);
 					    prices.add(price);
-						cache.get(valueDate).put(id, price);					   		    
-					} catch (SessionException e) {
+						cache.get(valueDate).put(id, price);
+						// hack - prevent too many requests per minute
+						Thread.sleep(2000);
+					} catch (SessionException | InterruptedException e) {
 						Log.getLogger().warn(e.getMessage(), e);
 					}			
 				}
@@ -143,7 +146,8 @@ public class HistoricalPriceCache {
 	
 	private void insertInMongo(List<Price> prices) {
 		Log.getLogger().info("Inserting historical prices from IG into Mongo database...");
-		MongoDatabase db = RiskEngine.getMongoClient().getDatabase(MongoConstants.DATABASE_NAME);
+		MongoDatabase db = Mongo.getMongoDatabase(MongoConstants.DATABASE_NAME);
+		//RiskEngine.getMongoClient().getDatabase(MongoConstants.DATABASE_NAME);
 		MongoCollection<Price> pricesCollection = db.getCollection(MongoConstants.PRICE_COLLECTION, Price.class);
 		pricesCollection.insertMany(prices);
 	}
@@ -172,7 +176,7 @@ public class HistoricalPriceCache {
 	}
 	
 	private MongoClient getMongoClient() {
-		return RiskEngine.getMongoClient();
+		return Mongo.getMongoClient();//RiskEngine.getMongoClient();
 	}
 }
 	

@@ -4,13 +4,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.JCheckBox;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 
-import com.ngray.option.financialinstrument.Security;
 import com.ngray.option.ig.refdata.OptionReferenceData;
-import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 
 @SuppressWarnings("serial")
 public class StrikeSelectionTableModel extends DefaultTableModel {
@@ -22,7 +18,7 @@ public class StrikeSelectionTableModel extends DefaultTableModel {
 	}
 	
 	@Override
-    public Class getColumnClass(int column) {
+    public Class<?> getColumnClass(int column) {
         switch (column) {
         case 0:
             return Boolean.class;

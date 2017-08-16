@@ -1,7 +1,6 @@
 package com.ngray.option.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class Service<K, V> {
 	 * @return
 	 */
 	public List<ServiceListener<K,V>> getListeners(K key) {
-		List<ServiceListener<K,V>> listenersCopy = null;
+		//List<ServiceListener<K,V>> listenersCopy = null;
 		synchronized(listenerLock) {
 			if (listeners.containsKey(key)) {
 				// the list might still be modified by a different thread, making

@@ -21,7 +21,9 @@ public class Frames {
 		frame.setClosable(true);
 		frame.setIconifiable(true);
 		frame.pack();
-		frame.addInternalFrameListener(listener);	
+		if (listener != null) {
+			frame.addInternalFrameListener(listener);
+		}
 		show(frame);
 		return frame;
 	}

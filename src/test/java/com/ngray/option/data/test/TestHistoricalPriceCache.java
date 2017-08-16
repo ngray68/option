@@ -21,6 +21,7 @@ import com.ngray.option.data.HistoricalPriceCache;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
+import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.Price;
 import com.ngray.option.mongo.PriceCodec;
 
@@ -29,7 +30,7 @@ public class TestHistoricalPriceCache {
 	private Session session = null;
 	private String  loginDetailsFile = "/Users/nigelgray/Documents/details.txt";
 	
-	private MongoClient client;
+	//private MongoClient client;
 	private HistoricalPriceCache cache = new HistoricalPriceCache("Test");
 	
 	private String readFile(String fileName) throws IOException {
@@ -49,7 +50,7 @@ public class TestHistoricalPriceCache {
 		String json = readFile(loginDetailsFile);
 		SessionLoginDetails loginDetails = SessionLoginDetails.fromJson(json);
 		session = Session.login(loginDetails, isLive);	
-		
+		/*
 		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 				MongoClient.getDefaultCodecRegistry(),
 				CodecRegistries.fromCodecs(new PriceCodec(MongoClient.getDefaultCodecRegistry()))
@@ -58,16 +59,14 @@ public class TestHistoricalPriceCache {
 		            .build();
 
 		client = new MongoClient("localhost:27017", options);
-		
+		*/
 		RiskEngine.setTestSession(session);
-		RiskEngine.setTestMongoClient(client);
+		//RiskEngine.setTestMongoClient(client);
 	}
 	
 	@After
 	public void tearDown() {
-		if (client != null) {
-			client.close();
-		}
+		Mongo.getMongoClient().close();
 		if (session != null) {
 			try {
 				session.logout();

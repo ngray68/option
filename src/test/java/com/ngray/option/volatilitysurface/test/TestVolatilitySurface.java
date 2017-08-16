@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 
+import org.apache.commons.math3.analysis.interpolation.BicubicInterpolator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,15 +23,16 @@ import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
 import com.ngray.option.ig.SessionLoginDetails;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
-import com.ngray.option.mongo.VolatilitySurfaceDefinition;
 import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.MongoConstants;
+import com.ngray.option.mongo.VolatilitySurfaceDefinition;
 import com.ngray.option.mongo.Price.SnapshotType;
+import com.ngray.option.volatilitysurface.VolatilitySurface;
 import com.ngray.option.volatilitysurface.VolatilitySurfaceDataSet;
 import com.ngray.option.volatilitysurface.VolatilitySurfaceDataSetBuilder;
 import com.ngray.option.volatilitysurface.VolatilitySurfaceException;
 
-public class TestVolatilitySurfaceDataSetBuilder {
+public class TestVolatilitySurface {
 
 	private Session session = null;
 	private String  loginDetailsFile = "/Users/nigelgray/Documents/details.txt";
@@ -87,16 +89,30 @@ public class TestVolatilitySurfaceDataSetBuilder {
 			}
 		}
 	}
+
 	@Test
-	public void testBuild() throws VolatilitySurfaceException {
+	public void testGetImpliedVolatility() throws VolatilitySurfaceException {
 		MongoDatabase db = Mongo.getMongoDatabase(MongoConstants.DATABASE_NAME);
 		MongoCollection<VolatilitySurfaceDefinition> collection = db.getCollection("volatility_surface_definition", VolatilitySurfaceDefinition.class);
 		FindIterable<VolatilitySurfaceDefinition> docs = collection.find(Filters.eq("Name", "FTSE100-CALL"));
 		VolatilitySurfaceDefinition definition = docs.first();	
 		assertNotNull(definition);
-		VolatilitySurfaceDataSetBuilder builder = new VolatilitySurfaceDataSetBuilder(definition);
-		VolatilitySurfaceDataSet dataSet = builder.build(LocalDate.now(), SnapshotType.CLOSE);
-		assertNotNull(dataSet);	
+		VolatilitySurfaceDataSet dataSet = buildDataSet(definition, LocalDate.now());
+		
+		// Bicubic interpolator has no constraints on the number of data points
+		VolatilitySurface surface = new VolatilitySurface(dataSet, SnapshotType.CLOSE, new BicubicInterpolator());
+		assertNotNull(surface);
+		double impVol = surface.getImpliedVolatility(100.0, -10.0);
+		System.out.println(impVol);
 	}
+	
+	private VolatilitySurfaceDataSet buildDataSet(VolatilitySurfaceDefinition definition, LocalDate valueDate) throws VolatilitySurfaceException {
+		VolatilitySurfaceDataSetBuilder builder = new VolatilitySurfaceDataSetBuilder(definition);
+		VolatilitySurfaceDataSet dataSet = builder.build(valueDate, SnapshotType.CLOSE);
+		assertNotNull(dataSet);
+		return dataSet;
+	}
+	
+	
 
 }

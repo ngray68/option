@@ -30,6 +30,7 @@ public class MainUI {
 	// in the same session
 	private OptionLadderDialog optionRiskLadderDialog;
 	private ScenarioDefinitionDialog scenarioDefinitionDialog;
+	private VolatilitySurfaceBuildDialog volatilitySurfaceBuildDialog;
 	
 	public MainUI() {
 		initialize();
@@ -90,10 +91,11 @@ public class MainUI {
 		analysisMenu = new JMenu("Analysis");
 		JMenuItem optionLadder = new JMenuItem("Option Ladder...");
 		analysisMenu.add(optionLadder);
+		JMenuItem buildVolatilitySurface = new JMenuItem("Build Volatility Surface...");
+		analysisMenu.add(buildVolatilitySurface);
 		
-		optionLadder.addActionListener(
-				(event) -> { showOptionLadderDialog(); }
-				);
+		optionLadder.addActionListener(event -> showOptionLadderDialog());	
+		buildVolatilitySurface.addActionListener(event -> showVolatilitySurfaceBuildDialog());
 		
 		
 		riskMenu = new JMenu("Positions");
@@ -121,6 +123,14 @@ public class MainUI {
 		mainMenu.add(analysisMenu);
 		mainMenu.add(riskMenu);
 		parentFrame.setJMenuBar(mainMenu);
+	}
+
+	private void showVolatilitySurfaceBuildDialog() {
+		Log.getLogger().debug("Opening VolatilitySurfaceBuildDialog");
+		if (volatilitySurfaceBuildDialog == null) {
+			volatilitySurfaceBuildDialog = new VolatilitySurfaceBuildDialog(this);
+		}
+		volatilitySurfaceBuildDialog.show();
 	}
 
 	private void showScenarios() {

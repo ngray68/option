@@ -18,6 +18,8 @@ public final class IGPriceSnapshot {
 	private String snapshotTime;
 	private int lastTradedVolume;
 	
+	
+	
 	/**
 	 * Argument-less constructor needed for Json 
 	 */
@@ -60,7 +62,7 @@ public final class IGPriceSnapshot {
 	public String toString() {
 		return getSnapshotTime() + "," + getOpenPrice().getMid() + "," + getClosePrice().getMid() + "," + getHighPrice().getMid() + "," + getLowPrice().getMid() + "," + getLastTradedVolume();
 	}
-
+	
 	public IGPrice getOpenPrice() {
 		return openPrice;
 	}
