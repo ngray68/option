@@ -4,6 +4,8 @@ import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Properties;
 
 import javax.swing.JButton;
@@ -16,15 +18,10 @@ import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
 import org.apache.commons.math3.analysis.interpolation.BicubicInterpolator;
 import org.jdatepicker.DateModel;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
 import com.ngray.option.Log;
-import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.MongoCache;
 import com.ngray.option.mongo.MongoCacheRegistry;
 import com.ngray.option.mongo.MongoCacheRegistryException;
-import com.ngray.option.mongo.MongoConstants;
 import com.ngray.option.mongo.Price.SnapshotType;
 
 import net.miginfocom.swing.MigLayout;
@@ -49,6 +46,8 @@ public class VolatilitySurfaceBuildDialog {
 	private VolatilitySurfaceDefinition definition;
 	private LocalDate valueDate;
 	private SnapshotType snapshotType;
+	private JButton build;
+	private JButton cancel;
 	
 	public VolatilitySurfaceBuildDialog(MainUI parentUI) {
 		this.parentUI = parentUI;
@@ -69,6 +68,7 @@ public class VolatilitySurfaceBuildDialog {
 	}
 	
 	private void initialize() {
+		Log.getLogger().debug("VolatiltySurfaceDialog: creating components and listeners");
 		createDialog();
 		createVolSurfaceDefinitionBox();
 		createDatePicker();
@@ -78,15 +78,24 @@ public class VolatilitySurfaceBuildDialog {
 	}
 
 	private void createBuildCancelButtons() {
-		JButton build = new JButton("Build...");
-		JButton cancel = new JButton("Cancel");
+		build = new JButton("Build...");
+		cancel = new JButton("Cancel");
+		enableBuildButtonOnValidate();
 		dialog.add(build, "cell 0 6");
 		dialog.add(cancel, "cell 1 6");	
 		cancel.addActionListener(e -> dialog.dispose());
 		build.addActionListener(e -> buildVolatilitySurface());
 	}
+	
+	private void enableBuildButtonOnValidate() {
+		build.setEnabled(false);
+		if (validateChoice()) {
+			build.setEnabled(true);
+		}
+	}
 
 	private void buildVolatilitySurface() {
+		Log.getLogger().debug("VolatiltySurfaceDialog: build volatility surface");
 		if (validateChoice()) {
 			try {
 				VolatilitySurfaceDataSet dataSet = new VolatilitySurfaceDataSetBuilder(definition).build(valueDate, snapshotType);
@@ -103,7 +112,13 @@ public class VolatilitySurfaceBuildDialog {
 	}
 
 	private boolean validateChoice() {
-		// TODO Auto-generated method stub
+		if (valueDate == null || definition == null || snapshotType == null) return false;
+		
+		if (definition.getValidFrom().compareTo(valueDate) > 0 ||
+				(definition.getValidTo() != null && definition.getValidTo().compareTo(valueDate) < 0)) {
+				return false;
+		}
+		
 		return true;
 	}
 	
@@ -132,10 +147,18 @@ public class VolatilitySurfaceBuildDialog {
 	}
 
 	private void addSnapshotTypeListener() {
-		snapshotTypeBox.addActionListener(e -> snapshotType = (SnapshotType)snapshotTypeBox.getSelectedItem());
+		snapshotTypeBox.addActionListener(e -> {
+			if (snapshotTypeBox.getSelectedItem() == null) {
+				snapshotType = null;
+			} else {
+				snapshotType = (SnapshotType)snapshotTypeBox.getSelectedItem();
+			}
+			enableBuildButtonOnValidate();
+		});
 	}
 
 	private void fillSnapshotTypeBox() {
+		snapshotTypeBox.addItem(null);
 		for (SnapshotType type : SnapshotType.values()) {
 			snapshotTypeBox.addItem(type);
 		}
@@ -144,8 +167,6 @@ public class VolatilitySurfaceBuildDialog {
 	private void createDatePicker() {
 		JLabel label = new JLabel("Value Date:");
 		UtilDateModel model = new UtilDateModel();
-		//model.setDate(20,04,2014);
-		// Need this...
 		Properties p = new Properties();
 		p.put("text.today", "Today");
 		p.put("text.month", "Month");
@@ -161,7 +182,9 @@ public class VolatilitySurfaceBuildDialog {
 		DateModel<?> model = valueDatePicker.getModel();
 		// model uses months 0 to 11
 		valueDatePicker.addActionListener(
-			e -> valueDate = LocalDate.of(model.getYear(), model.getMonth() + 1, model.getDay())
+			e -> {  valueDate = LocalDate.of(model.getYear(), model.getMonth() + 1, model.getDay());
+					enableBuildButtonOnValidate();
+			}
 			);
 	}
 
@@ -175,19 +198,30 @@ public class VolatilitySurfaceBuildDialog {
 	}
 
 	private void addVolSurfaceDefinitionBoxListener() {
-		volSurfaceDefinitionBox.addActionListener(e -> definition = (VolatilitySurfaceDefinition)volSurfaceDefinitionBox.getSelectedItem());		
+		volSurfaceDefinitionBox.addActionListener(e -> {
+			if (volSurfaceDefinitionBox.getSelectedItem() == null) {
+				definition = null;
+			} else {
+				definition = (VolatilitySurfaceDefinition)volSurfaceDefinitionBox.getSelectedItem();
+			}
+			enableBuildButtonOnValidate();
+		});		
 	}
 	
 	private void fillVolSurfaceDefinitionBox() {
-		// TODO - fill from MongoCache
-		MongoDatabase db = Mongo.getMongoDatabase(MongoConstants.DATABASE_NAME);
-		//RiskEngine.getMongoClient().getDatabase("optiondb");
-		MongoCollection<VolatilitySurfaceDefinition> collection = db.getCollection("volatility_surface_definition", VolatilitySurfaceDefinition.class);
-		MongoCursor<VolatilitySurfaceDefinition> docs = collection.find().iterator();
-		while (docs.hasNext()) {
-			VolatilitySurfaceDefinition volSurfaceDef = docs.next();	
-			volSurfaceDefinitionBox.addItem(volSurfaceDef);
+		volSurfaceDefinitionBox.addItem(null);
+		try {
+			MongoCache<VolatilitySurfaceDefinition> cache = MongoCacheRegistry.get(VolatilitySurfaceDefinition.class);
+			Collection<VolatilitySurfaceDefinition> volSurfaces = cache.getAll(true);
+			Iterator<VolatilitySurfaceDefinition> iterator = volSurfaces.iterator();
+			while (iterator.hasNext()) {
+				VolatilitySurfaceDefinition volSurfaceDef = iterator.next();	
+				volSurfaceDefinitionBox.addItem(volSurfaceDef);
+			}
+		} catch (MongoCacheRegistryException e) {
+			Log.getLogger().error(e.getMessage(), e);
 		}
+		
 	}
 
 	private void createDialog() {
@@ -197,8 +231,4 @@ public class VolatilitySurfaceBuildDialog {
 		
 		dialog.getContentPane().setLayout(new MigLayout("", "[grow][grow]", "[][][][][][][]"));
 	}
-	
-	
-
-
 }

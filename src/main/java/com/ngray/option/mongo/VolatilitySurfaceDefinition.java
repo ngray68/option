@@ -106,7 +106,7 @@ public class VolatilitySurfaceDefinition implements MongoObject{
 	
 	@Override
 	public String toString() {
-		return name;
+		return getUniqueId();
 	}
 
 

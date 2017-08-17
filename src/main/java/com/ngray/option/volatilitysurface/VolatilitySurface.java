@@ -84,7 +84,7 @@ public class VolatilitySurface implements MongoObject {
 	 */
 	public VolatilitySurface(VolatilitySurfaceDataSet dataSet, SnapshotType snapshotType, BivariateGridInterpolator interpolator) {
 		//this.dataSet = dataSet;
-		this.uniqueId = dataSet.getDefinition().getName() + ":" + dataSet.getValueDate();
+		this.uniqueId = dataSet.getDefinition().getName() + ":" + dataSet.getValueDate() + ":" + snapshotType;
 		this.name = dataSet.getDefinition().getName();
 		this.valueDate = dataSet.getValueDate();
 		this.optionType = dataSet.getDefinition().getCallOrPut();
@@ -145,7 +145,7 @@ public class VolatilitySurface implements MongoObject {
 	}
 	
 	public String getUniqueId() {
-		return uniqueId; //dataSet.getDefinition().getName() + ":" + dataSet.getValueDate();
+		return uniqueId;
 	}
 	
 	public LocalDate getValueDate() {
@@ -255,5 +255,21 @@ public class VolatilitySurface implements MongoObject {
 
 	public BivariateGridInterpolator getInterpolator() {
 		return interpolator;
+	}
+	
+	public double getMinDaysToExpiry() {
+		return daysToExpiry[0];
+	}
+	
+	public double getMaxDaysToExpiry() {
+		return daysToExpiry[daysToExpiry.length - 1];
+	}
+	
+	public double getMinStrikeOffset() {
+		return strikeOffsets[0];
+	}
+	
+	public double getMaxStrikeOffset() {
+		return strikeOffsets[strikeOffsets.length - 1];
 	}
 }

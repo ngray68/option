@@ -78,6 +78,11 @@
   		<artifactId>jdatepicker</artifactId>
   		<version>1.3.4</version>
   	</dependency>
+  	<dependency>
+  		<groupId>org.jzy3d</groupId>
+  		<artifactId>jzy3d-api</artifactId>
+  		<version>1.0.0</version>
+  	</dependency>
   </dependencies>
   <repositories>
     <repository>
@@ -85,6 +90,16 @@
       <name>Weswit repository</name>
       <url>http://www.lightstreamer.com/repo/maven</url>
     </repository>
+    <repository>
+     <id>jzy3d-snapshots</id>
+     <name>Jzy3d Snapshots</name>
+     <url>http://maven.jzy3d.org/snapshots</url>
+  </repository>
+  <repository>
+     <id>jzy3d-releases</id>
+     <name>Jzy3d Releases</name>
+     <url>http://maven.jzy3d.org/releases</url>
+  </repository>
   </repositories>
   <properties>
    <maven.compiler.source>1.8</maven.compiler.source>

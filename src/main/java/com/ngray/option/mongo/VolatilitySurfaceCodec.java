@@ -1,7 +1,10 @@
 package com.ngray.option.mongo;
 
 import java.time.LocalDate;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.math3.analysis.interpolation.BivariateGridInterpolator;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
@@ -29,13 +32,20 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 		Document doc = new Document();
 		doc.put("UniqueId", volSurface.getUniqueId());
 		doc.put("Name", volSurface.getName());
-		doc.put("ValueDate", volSurface.getValueDate());
-		doc.put("SnapshotType", volSurface.getSnapshotType());
+		doc.put("ValueDate", volSurface.getValueDate().toString());
+		doc.put("SnapshotType", volSurface.getSnapshotType().toString());
 		doc.put("OptionType", volSurface.getOptionType().toString());
 		doc.put("Interpolator", volSurface.getInterpolator().getClass().getName());
-		doc.put("DaysToExpiryAxis", volSurface.getDaysToExpiry());
-		doc.put("StrikeOffsetAxis", volSurface.getStrikeOffsets());
-		doc.put("ImpliedVols", volSurface.getImpliedVolatilities());
+		List<Double> daysToExpiry = Arrays.stream(volSurface.getDaysToExpiry()).boxed().collect(Collectors.toList());
+		List<Double> strikeOffsets = Arrays.stream(volSurface.getStrikeOffsets()).boxed().collect(Collectors.toList());
+		List<List<Double>> impliedVols = new ArrayList<>();
+		double[][] impliedVolsArray = volSurface.getImpliedVolatilities();
+		for (double[] impliedVolsRow : impliedVolsArray) {
+			impliedVols.add(Arrays.stream(impliedVolsRow).boxed().collect(Collectors.toList()));
+		}
+		doc.put("DaysToExpiryAxis", daysToExpiry);
+		doc.put("StrikeOffsetAxis", strikeOffsets);
+		doc.put("ImpliedVols", impliedVols);
 		documentCodec.encode(writer, doc, context);
 	}
 
@@ -44,6 +54,7 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 		return VolatilitySurface.class;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public VolatilitySurface decode(BsonReader reader, DecoderContext context) {
 		Document doc = documentCodec.decode(reader, context);
@@ -58,9 +69,19 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			Log.getLogger().error(e.getMessage(), e);
 		}
-		double[] daysToExpiry = (double[])doc.get("DaysToExpiryAxis");
-		double[] strikeOffsets = (double[])doc.get("StrikeOffsetAxis");
-		double[][] impliedVols = (double[][])doc.get("ImpliedVols");
+		
+		List<Double> daysToExpiryList = (List<Double>)doc.get("DaysToExpiryAxis");
+		List<Double> strikeOffsetsList = (List<Double>)doc.get("StrikeOffsetsAxis");
+		List<List<Double>> impliedVolsList = (List<List<Double>>)doc.get("ImpliedVols");
+		double[] daysToExpiry = daysToExpiryList.stream().mapToDouble(Double::doubleValue).toArray();
+		double[] strikeOffsets = strikeOffsetsList.stream().mapToDouble(Double::doubleValue).toArray();
+		double[][] impliedVols = new double[impliedVolsList.size()][];
+		int i = 0;
+		for (List<Double> impliedVolsRow : impliedVolsList) {
+			impliedVols[i] =  impliedVolsRow.stream().mapToDouble(Double::doubleValue).toArray();
+			++i;
+		}
+		
 		return new VolatilitySurface(uniqueId, name, valueDate, optionType, snapshotType, interpolator, daysToExpiry, strikeOffsets, impliedVols);
 	}
 

@@ -26,7 +26,9 @@ public class Mongo {
 		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 				MongoClient.getDefaultCodecRegistry(),
 				CodecRegistries.fromCodecs(new VolatilitySurfaceDefinitionCodec(MongoClient.getDefaultCodecRegistry())),
-				CodecRegistries.fromCodecs(new PriceCodec(MongoClient.getDefaultCodecRegistry()))
+				CodecRegistries.fromCodecs(new PriceCodec(MongoClient.getDefaultCodecRegistry())),
+				CodecRegistries.fromCodecs(new VolatilitySurfaceCodec(MongoClient.getDefaultCodecRegistry()))
+
 			);
 		 MongoClientOptions options = MongoClientOptions.builder().codecRegistry(codecRegistry)
 		            .build();
