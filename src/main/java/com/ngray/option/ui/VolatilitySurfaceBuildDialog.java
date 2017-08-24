@@ -99,6 +99,7 @@ public class VolatilitySurfaceBuildDialog {
 		if (validateChoice()) {
 			try {
 				VolatilitySurfaceDataSet dataSet = new VolatilitySurfaceDataSetBuilder(definition).build(valueDate, snapshotType);
+				//System.out.println(dataSet.debugPrint());
 				VolatilitySurface surface = new VolatilitySurface(dataSet, snapshotType, new BicubicInterpolator());
 				MongoCache<VolatilitySurface> cache = MongoCacheRegistry.get(VolatilitySurface.class);
 				cache.put(surface);

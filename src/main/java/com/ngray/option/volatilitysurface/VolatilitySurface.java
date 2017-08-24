@@ -220,9 +220,9 @@ public class VolatilitySurface implements MongoObject {
 	}
 
 	private void buildStrikeOffsetsArray(VolatilitySurfaceDataSet dataSet) {
-		strikeOffsets = new double[dataSet.getDefinition().getStrikeOffsets().size()];
+		strikeOffsets = new double[dataSet.getStrikeOffsets().size()];
 		int i = 0;
-		for (double strikeOffset : dataSet.getDefinition().getStrikeOffsets()) {
+		for (double strikeOffset : dataSet.getStrikeOffsets()) {
 			strikeOffsets[i] = strikeOffset;
 			strikeOffsetIndices.put(Double.valueOf(strikeOffsets[i]), Integer.valueOf(i));
 			++i;

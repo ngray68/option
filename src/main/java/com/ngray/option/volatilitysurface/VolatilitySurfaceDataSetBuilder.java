@@ -1,6 +1,7 @@
 package com.ngray.option.volatilitysurface;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -82,6 +83,7 @@ public class VolatilitySurfaceDataSetBuilder {
 						optionData.put(
 							underlyingEpic,  
 							getOptionData(
+									underlyingEpic,
 									getATMStrike(underlyingEpic, underlyingPrices.get(underlyingEpic).getPrice(snapshotType)), 
 									strikeOffsets, 
 									definition.getOptionEpicForm(underlyingEpic))
@@ -107,22 +109,26 @@ public class VolatilitySurfaceDataSetBuilder {
 					)
 				);
 		
-		// if we are missing prices we throw
+		// if we are missing too many prices we throw
 		if (optionPrices.containsValue(null)) {
-			throw new VolatilitySurfaceException("VolatilitySurfaceDataSetLoader: could not find option prices for all options in the definition");
+			prune(optionPrices, optionData);
 		}
 		
 		return new VolatilitySurfaceDataSet(valueDate, underlyingPrices, optionData, optionPrices, definition);		
 	}
 				
-	private Set<OptionData> getOptionData(double atm, List<Double> strikeOffsets, String optionEpicForm) {
+	private Set<OptionData> getOptionData(String underlyingEpic, double atm, List<Double> strikeOffsets, String optionEpicForm) {
 		
 		Set<OptionData> optionData = new TreeSet<>();
 		strikeOffsets.forEach(
 				offset -> {
 					Double strike = atm + offset;
-					String id = optionEpicForm.replace("{STRIKE}", Integer.toString(strike.intValue()));
-					optionData.add(new OptionData(id, offset));
+					OptionReferenceData refData = OptionReferenceDataMap.getOptionReferenceData(underlyingEpic, strike, definition.getCallOrPut());
+					if (refData != null) {
+						optionData.add(new OptionData(refData.getOptionName(), offset));
+					} else {
+						Log.getLogger().warn("Can't find option reference data for " + underlyingEpic + " " + strike + " " + definition.getCallOrPut());
+					}
 				}
 			);
 		
@@ -160,6 +166,48 @@ public class VolatilitySurfaceDataSetBuilder {
 			}
 		}
 		return atmStrike;
+	}
+	
+	private void prune(Map<String, Price> optionPrices, Map<String, Set<OptionData>> optionDataSetMap) throws VolatilitySurfaceException {
+		// if there are missing prices (ie. null entries in optionPrices) we need to prune the data set so that
+		// the option chains for all underlyings have the same set of strike offsets.
+		// So, for each missing price, we find all the equivalent strike offsets in optionDataSetMap and remove them
+		// as well as removing the null prices from optionPrices.
+		
+		Set<String> optionsWithNullPrices = new HashSet<>();
+		optionPrices.forEach((id, price) -> { if (price == null) optionsWithNullPrices.add(id); });
+	
+		Set<OptionData> allOptionData = new HashSet<>();
+		optionDataSetMap.forEach((underlyingId, optionDataSet) -> allOptionData.addAll(optionDataSet));
+		
+		Set<Double> strikeOffsetsToRemove = 
+				 allOptionData.stream().filter(optionData -> optionsWithNullPrices.contains(optionData.getOptionId()))
+				              .map(optionData -> optionData.getAtmOffset())
+		                      .collect(Collectors.toSet());
+		
+		Set<OptionData> optionDataToRemove =
+				allOptionData.stream().filter(optionData -> strikeOffsetsToRemove.contains(optionData.getAtmOffset()))
+				             .collect(Collectors.toSet());
+		
+		// modify the prices map to remove all option prices no longer required
+		optionDataToRemove.forEach(
+				optionData -> optionPrices.remove(optionData.getOptionId())
+			);
+		
+		// modify the option data set map to remove all option data no longer required
+		optionDataSetMap.forEach(
+				(underlyingId, optionDataSet) -> optionDataSet.removeAll(optionDataToRemove)		
+			);
+		
+		if (optionPrices.isEmpty()) {
+			throw new VolatilitySurfaceException("VolatilitySurfaceDataSetLoader: insufficient option price availability to build the data set");
+		} 
+		
+		for(Set<OptionData> optionDataSet : optionDataSetMap.values()) {
+			if (optionDataSet.size() <= 1) {
+				throw new VolatilitySurfaceException("VolatilitySurfaceDataSetLoader: insufficient option price availability to build the data set");
+			}
+		}
 	}
 
 }

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,6 +65,20 @@ public class OptionReferenceDataMap {
 		}
 		
 		return referenceDataByUnderlying.get(underlying);
+	}
+	
+	
+	public static OptionReferenceData getOptionReferenceData(String underlyingId, double strike, Type callOrPut) {
+		List<OptionReferenceData> refDataList = getOptionReferenceDataForUnderlying(underlyingId);
+		Optional<OptionReferenceData> optionRefData = refDataList.stream()
+				   .filter(refData -> Double.compare(refData.getStrike(), strike) == 0 && refData.getCallOrPut() == callOrPut)
+				   .findFirst();
+		
+		if (optionRefData.isPresent())  {
+			return optionRefData.get();
+		}
+		
+		return null;
 	}
 	
 	/**

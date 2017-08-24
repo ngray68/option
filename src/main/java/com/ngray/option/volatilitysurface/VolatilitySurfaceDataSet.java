@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.ngray.option.Log;
 import com.ngray.option.ig.refdata.MissingReferenceDataException;
@@ -66,6 +67,17 @@ public class VolatilitySurfaceDataSet {
 		this.options = new TreeMap<>(optionData);
 		this.optionPrices = new TreeMap<>(optionPrices);
 	}
+	
+	public String debugPrint() {
+		String output = "Volatility Surface Data Set\n" +
+	                    "=======================================================\n" +
+				        "\t\t" + definition.getStrikeOffsets() + "\n";
+	    
+		for (Map.Entry<String, Set<OptionData>> optionDataSet : options.entrySet()) {
+			 output += optionDataSet.getKey() + "\t" + optionDataSet.getValue() + "\n";
+		}
+		return output;  
+	}
 
 	public LocalDate getValueDate() {
 		return valueDate;
@@ -98,6 +110,20 @@ public class VolatilitySurfaceDataSet {
 			}
 		);
 		return expiries;
+	}
+	
+	public Set<Double> getStrikeOffsets() {
+		Set<Double> strikeOffsets = new TreeSet<>();
+		options.forEach(
+				(underlyingId, optionDataSet) -> { 
+					strikeOffsets.addAll(
+						optionDataSet.stream()
+									 .map(optionData -> (Double)optionData.getAtmOffset())
+									 .collect(Collectors.toSet())
+						);
+				}
+			);
+		return strikeOffsets;
 	}
 	
 	public Set<OptionData> getOptionData(String underlyingId) {
