@@ -3,6 +3,8 @@ package com.ngray.option.ig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 
@@ -93,6 +95,17 @@ public final class Session {
 	 */
 	public List<Header> getSessionHeaders() {
 		return Collections.unmodifiableList(sessionHeaders);
+	}
+	
+	/**
+	 * Return a modified copy of headers parameter with version 3 instead of version  1
+	 * @param headers
+	 * @return
+	 */
+	public List<Header> getSessionHeadersVersion3(List<Header> headers) {
+		List<Header> modifiedHeaders = headers.stream().filter(header -> !header.getName().equals("VERSION")).collect(Collectors.toList());
+		modifiedHeaders.add(new BasicHeader("VERSION", "3"));
+		return modifiedHeaders;
 	}
 	
 	/**

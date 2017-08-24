@@ -121,18 +121,24 @@ public class HistoricalPriceCache {
 					IGPriceSnapshotSequence seq = new IGPriceSnapshotSequence(id, Resolution.DAY, valueDate, valueDate);
 					try {
 						seq.getHistoricalPrices(session);
-						TreeSet<String> timestamps = new TreeSet<>(seq.getKeySet());
-						
-						// we cache the latest update for the given value date	
-						IGPriceSnapshot historicalPrice = seq.getHistoricalPrice(timestamps.last());
-						 if (!cache.containsKey(valueDate)) {
-								cache.put(valueDate, new TreeMap<>());
+						if (!seq.getKeySet().isEmpty()) {
+							TreeSet<String> timestamps = new TreeSet<>(seq.getKeySet());
+							
+							// we cache the latest update for the given value date
+							IGPriceSnapshot historicalPrice = seq.getHistoricalPrice(timestamps.last());
+							 if (!cache.containsKey(valueDate)) {
+									cache.put(valueDate, new TreeMap<>());
+							}
+						    Price price = new Price(id, valueDate, historicalPrice);
+						    Log.getLogger().debug("HistoricalPriceCache: inserting " + price);
+						    prices.add(price);
+							cache.get(valueDate).put(id, price);
+						} else {
+							Log.getLogger().warn("No prices found for " + id + " for value date " + valueDate);
 						}
-					    Price price = new Price(id, valueDate, historicalPrice);
-					    prices.add(price);
-						cache.get(valueDate).put(id, price);
 						// hack - prevent too many requests per minute
 						Thread.sleep(2000);
+						
 					} catch (SessionException | InterruptedException e) {
 						Log.getLogger().warn(e.getMessage(), e);
 					}			

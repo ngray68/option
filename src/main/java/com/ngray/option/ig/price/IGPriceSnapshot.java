@@ -16,6 +16,7 @@ public final class IGPriceSnapshot {
 	private IGPrice highPrice;
 	private IGPrice lowPrice;
 	private String snapshotTime;
+	private String snapshotTimeUTC;
 	private int lastTradedVolume;
 	
 	
@@ -36,15 +37,16 @@ public final class IGPriceSnapshot {
 	 * @param snapshotTimeUTC
 	 * @param lastTradedVolume
 	 */
-	private IGPriceSnapshot(IGPrice openPrice, IGPrice closePrice, IGPrice highPrice, IGPrice lowPrice, String snapshotTime, int lastTradedVolume) {
+	private IGPriceSnapshot(IGPrice openPrice, IGPrice closePrice, IGPrice highPrice, IGPrice lowPrice, String snapshotTime, String snapshotTimeUTC, int lastTradedVolume) {
 		this.setOpenPrice(openPrice);
 		this.setClosePrice(closePrice);
 		this.setHighPrice(highPrice);
 		this.setLowPrice(lowPrice);
 		this.setSnapshotTime(snapshotTime);
+		this.setSnapshotTimeUTC(snapshotTimeUTC);
 		this.setLastTradedVolume(lastTradedVolume);
 	}
-	
+
 	public static IGPriceSnapshot fromJson(String json) {
 		Gson gson = new Gson();
 		return gson.fromJson(json, IGPriceSnapshot.class);
@@ -54,6 +56,7 @@ public final class IGPriceSnapshot {
 		Gson gson = new Gson();
 		return gson.toJson(this);
 	}
+	
 	public static String getAttributeNames() {
 		return "Snapshot Time" + "," + "Open" + ","	 + "Close" + "," + "High" + "," + "Low" + "," + "Volume";
 		}
@@ -99,14 +102,22 @@ public final class IGPriceSnapshot {
 		return snapshotTime;
 	}
 	
-	public String getSnapshotTimeISOFormat() {
+	/*public String getSnapshotTimeISOFormat() {
 		return snapshotTime.replaceAll("-", "T")
 				           .replaceFirst(":", "-")
 				           .replaceFirst(":", "-");
-	}
+	}*/
 	
 	public void setSnapshotTime(String snapshotTime) {
 		this.snapshotTime = snapshotTime;
+	}
+	
+	public String getSnapshotTimeUTC() {
+		return snapshotTimeUTC;
+	}
+	
+	public void setSnapshotTimeUTC(String snapshotTimeUTC) {
+		this.snapshotTimeUTC = snapshotTimeUTC;
 	}
 
 	public int getLastTradedVolume() {
@@ -124,6 +135,7 @@ public final class IGPriceSnapshot {
 		private IGPrice highPrice;
 		private IGPrice lowPrice;
 		private String snapshotTime;
+		private String snapshotTimeUTC;
 		private int lastTradedVolume;
 		
 		public Builder() {
@@ -137,6 +149,7 @@ public final class IGPriceSnapshot {
 						getHighPrice(),
 						getLowPrice(),
 						getSnapshotTime(),
+						getSnapshotTimeUTC(),
 						getLastTradedVolume()
 					);
 		}
@@ -193,6 +206,14 @@ public final class IGPriceSnapshot {
 		public Builder setLastTradedVolume(int lastTradedVolume) {
 			this.lastTradedVolume = lastTradedVolume;
 			return this;
+		}
+
+		public String getSnapshotTimeUTC() {
+			return snapshotTimeUTC;
+		}
+
+		public void setSnapshotTimeUTC(String snapshotTimeUTC) {
+			this.snapshotTimeUTC = snapshotTimeUTC;
 		}		
 	}
 }

@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.google.gson.Gson;
-import com.ngray.option.ig.rest.RestAPIGet;
+import com.ngray.option.ig.rest.RestAPIGet3;
 import com.ngray.option.ig.rest.RestAPIResponse;
 import com.ngray.option.ig.Session;
 import com.ngray.option.ig.SessionException;
@@ -85,19 +85,16 @@ public final class IGPriceSnapshotSequence {
 	}
 	
 	private String format(LocalDate date, String timeSuffix) {
-		// format at yyyy:mm:dd-HH:MM:ss
-		return date.getYear() + ":" + 
-			   String.format("%02d", date.getMonth().getValue()) + ":" + 
-			   String.format("%02d", date.getDayOfMonth()) + "-" +
-			   timeSuffix;
+		// format at yyyy-mm-ddTHH:MM:ss
+		return date.toString() + "T" + timeSuffix;
 	}
 	
 	public void getHistoricalPrices(Session session) throws SessionException {		
-		String request = "/prices/" + id + "/" + resolution + "?startdate=" + startDate + "&enddate=" + endDate;
-		RestAPIGet get = new RestAPIGet(request);
+		String request = "/prices/" + id + "?resolution=" + resolution + "&from=" + startDate + "&to=" + endDate;
+		RestAPIGet3 get = new RestAPIGet3(request);
 		RestAPIResponse response = get.execute(session);
 		HistoricalPricesResponse prices = HistoricalPricesResponse.fromJson(response.getResponseBodyAsJson());
-		prices.getPrices().forEach((price) -> historicalPrices.put(price.getSnapshotTime(), price));	
+		prices.getPrices().forEach((price) -> historicalPrices.put(price.getSnapshotTimeUTC(), price));	
 	}
 	
 	public Set<String> getKeySet() {

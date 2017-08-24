@@ -54,8 +54,19 @@ public class Price implements MongoObject {
 		this.open = historicalPrice.getOpenPrice().getMid();
 		this.close = historicalPrice.getClosePrice().getMid();
 		this.low = historicalPrice.getLowPrice().getMid();
-		this.high = historicalPrice.getHighPrice().getMid();
-		this.timestamp = LocalDateTime.parse(historicalPrice.getSnapshotTimeISOFormat());
+		this.high = historicalPrice.getHighPrice().getMid();		
+		this.timestamp = LocalDateTime.parse(historicalPrice.getSnapshotTimeUTC());
+	}
+	
+	@Override
+	public String toString() {
+		return "Price: { Id : " + id + 
+				         ", ValueDate : " + valueDate +
+				         ", Open : " + open +
+				         ", Close : " + close +
+				         ", Low : " + low +
+				         ", High : " + high + 
+				         ", Timestamp : " + timestamp;
 	}
 
 	@Override

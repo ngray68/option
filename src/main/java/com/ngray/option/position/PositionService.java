@@ -185,11 +185,6 @@ public class PositionService {
 			notifyDeletePositionListeners(deletedPosition);
 			unsubscribeFromMarketDataService(deletedPosition, marketDataService);
 			unsubscribeFromRiskService(deletedPosition, riskService);
-			/*
-			PositionListener positionListener = getListener(deletedPosition.getUnderlying());
-			if (positionListener != null) {
-				removeListener(deletedPosition, positionListener);
-			} */
 			removeAllListeners(deletedPosition);
 		}
 	}
@@ -216,20 +211,9 @@ public class PositionService {
 					}
 				} else {
 					positionListeners.forEach(listener -> addListener(newPosition, listener));
+					notifyOpenPositionListeners(newPosition);
 				}		
 			}
-			
-			/*PositionListener positionListener= getListener(newPosition.getUnderlying());
-			if (positionListener != null) {
-				addListener(newPosition, positionListener);
-				notifyOpenPositionListeners(newPosition);
-			} else {
-				if (getView() != null) {
-					getView().onPositionInNewUnderlying(newPosition);
-				}
-				// NG we mustn't separately notify open position listeners as this will result in a double entry in
-				// the UI. Think about how to make this more robust
-			}*/
 			
 			subscribeToMarketDataService(newPosition, marketDataService);
 			subscribeToRiskService(newPosition, riskService);	
