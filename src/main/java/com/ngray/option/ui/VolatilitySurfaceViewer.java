@@ -74,15 +74,19 @@ public class VolatilitySurfaceViewer {
 					return volatilitySurface.getImpliedVolatility(x, y);
 				} catch (VolatilitySurfaceException e) {
 					Log.getLogger().warn(e.getMessage(), e);
-					return 0.0;
+					return Double.NaN;
 				}
 		    }
 		};
 
 		// Define range and precision for the function to plot
-		Range rangeX = new Range((float)volatilitySurface.getMinDaysToExpiry(), (float)volatilitySurface.getMaxDaysToExpiry());
-		Range rangeY = new Range((float)volatilitySurface.getMinStrikeOffset(), (float)volatilitySurface.getMaxStrikeOffset());
 		int steps = 50;
+		float expiryStepSize = (float)(volatilitySurface.getMaxDaysToExpiry() - volatilitySurface.getMinDaysToExpiry())/steps;
+		float strikeStepSize = (float)(volatilitySurface.getMaxStrikeOffset() - volatilitySurface.getMinStrikeOffset())/steps;
+		
+		Range rangeX = new Range((float)volatilitySurface.getMinDaysToExpiry() + expiryStepSize, (float)volatilitySurface.getMaxDaysToExpiry() - expiryStepSize);
+		Range rangeY = new Range((float)volatilitySurface.getMinStrikeOffset() + strikeStepSize, (float)volatilitySurface.getMaxStrikeOffset() - strikeStepSize);
+		
 
 		// Create a surface drawing that function
 		Shape surface = Builder.buildOrthonormal(new OrthonormalGrid(rangeX, steps, rangeY, steps), mapper);
