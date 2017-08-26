@@ -1,14 +1,22 @@
 package com.ngray.option.ui;
 
+import java.awt.CardLayout;
 import java.awt.EventQueue;
 import java.awt.HeadlessException;
 import java.awt.LayoutManager;
+
+import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+
 import com.ngray.option.Log;
+import com.ngray.option.ui.components.Wizard;
+import com.ngray.option.ui.components.WizardController;
+import com.ngray.option.ui.components.WizardPanel;
 
 /**
  * This is the main UI window of the application
@@ -93,10 +101,12 @@ public class MainUI {
 		analysisMenu.add(optionLadder);
 		JMenuItem buildVolatilitySurface = new JMenuItem("Build Volatility Surface...");
 		analysisMenu.add(buildVolatilitySurface);
+		JMenuItem timeSeriesAnalysis = new JMenuItem("Time Series Analysis...");
+		analysisMenu.add(timeSeriesAnalysis);
 		
 		optionLadder.addActionListener(event -> showOptionLadderDialog());	
 		buildVolatilitySurface.addActionListener(event -> showVolatilitySurfaceBuildDialog());
-		
+		timeSeriesAnalysis.addActionListener(event -> showTimeSeriesAnalysisWizard());
 		
 		riskMenu = new JMenu("Positions");
 		JMenuItem showPositions = new JMenuItem("View Positions");
@@ -123,6 +133,26 @@ public class MainUI {
 		mainMenu.add(analysisMenu);
 		mainMenu.add(riskMenu);
 		parentFrame.setJMenuBar(mainMenu);
+	}
+
+	private void showTimeSeriesAnalysisWizard() {
+		// test panels
+		JPanel first = new JPanel();
+		first.add(new  JButton("FIRST"));
+		JPanel second = new JPanel();
+		second.add(new  JButton("SECOND"));
+		JPanel third = new JPanel();
+		third.add(new  JButton("THIRD"));
+		JPanel fourth = new JPanel();
+		fourth.add(new  JButton("FOURTH"));
+		WizardPanel firstPanel = new WizardPanel(first, "FIRST");
+		WizardPanel secondPanel = new WizardPanel(second, "SECOND");
+		WizardPanel thirdPanel = new WizardPanel(third, "THIRD");
+		WizardPanel fourthPanel = new WizardPanel(fourth, "FOURTH");
+		firstPanel.setNext(secondPanel).setNext(thirdPanel).setNext(fourthPanel);
+		fourthPanel.setPrevious(thirdPanel).setPrevious(secondPanel).setPrevious(firstPanel);   
+		WizardController model = new WizardController(firstPanel);
+		new Wizard(parentFrame, "Volatility Surface Time Series", model).show();
 	}
 
 	private void showVolatilitySurfaceBuildDialog() {
