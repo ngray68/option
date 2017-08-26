@@ -3,7 +3,6 @@ package com.ngray.option.analysis.timeseries.test;
 import static org.junit.Assert.*;
 
 import java.time.LocalDate;
-import java.time.chrono.ChronoLocalDate;
 import java.util.List;
 
 import org.junit.Before;
@@ -14,7 +13,7 @@ import com.ngray.option.analysis.timeseries.TimeSeriesException;
 
 public class TestTimeSeries {
 
-	TimeSeries<ChronoLocalDate> testSeries;
+	TimeSeries<LocalDate> testSeries;
 	double minValue = 3.0;
 	double maxValue = 12.0;
 	double arithmeticMean = 158.0/25.0;
@@ -46,7 +45,7 @@ public class TestTimeSeries {
 	public void setUp() throws Exception {
 		int year = 2017;
 		int month = 8;
-		testSeries = new TimeSeries<ChronoLocalDate>();
+		testSeries = new TimeSeries<LocalDate>();
 		testSeries.insert(LocalDate.of(year, month, 1), 5.0);
 		testSeries.insert(LocalDate.of(year, month, 2), 6.0);
 		testSeries.insert(LocalDate.of(year, month, 3), 6.0);
@@ -100,11 +99,11 @@ public class TestTimeSeries {
 
 	@Test
 	public void testGetMovingAverage() throws TimeSeriesException {
-		TimeSeries<ChronoLocalDate> movingAverages = testSeries.getMovingAverage(5);
+		TimeSeries<LocalDate> movingAverages = testSeries.getMovingAverage(5);
 		assertTrue(movingAverages.getSize() == testSeries.getSize() - 5 + 1);
 		int i = 0;
-		List<ChronoLocalDate> timePoints = movingAverages.getTimePoints();
-		for (ChronoLocalDate timePoint : timePoints) {
+		List<LocalDate> timePoints = movingAverages.getTimePoints();
+		for (LocalDate timePoint : timePoints) {
 			assertTrue(Double.compare(movingAverages.getValue(timePoint), movingAvgs[i]) == 0);
 			++i;
 		}	

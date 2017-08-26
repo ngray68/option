@@ -14,7 +14,7 @@ import java.util.Queue;
  *
  * @param <K>
  */
-public class TimeSeries<K extends Comparable<K>> {
+public class TimeSeries<K extends Comparable<? super K>> {
 	
 	/**
 	 * Map of Double values keyed by an ordered set of keys

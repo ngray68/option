@@ -71,7 +71,7 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 		}
 		
 		List<Double> daysToExpiryList = (List<Double>)doc.get("DaysToExpiryAxis");
-		List<Double> strikeOffsetsList = (List<Double>)doc.get("StrikeOffsetsAxis");
+		List<Double> strikeOffsetsList = (List<Double>)doc.get("StrikeOffsetAxis");
 		List<List<Double>> impliedVolsList = (List<List<Double>>)doc.get("ImpliedVols");
 		double[] daysToExpiry = daysToExpiryList.stream().mapToDouble(Double::doubleValue).toArray();
 		double[] strikeOffsets = strikeOffsetsList.stream().mapToDouble(Double::doubleValue).toArray();
