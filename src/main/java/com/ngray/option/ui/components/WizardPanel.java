@@ -5,12 +5,14 @@ import javax.swing.JPanel;
 public class WizardPanel {
 	
 	private final JPanel panel;
+	private final WizardModel model;
 	private WizardPanel previous;
 	private WizardPanel next;
 	private String name;
 	
-	public WizardPanel(JPanel panel, String name) {
+	public WizardPanel(JPanel panel, String name, WizardModel model) {
 		this.panel = panel;
+		this.model = model;
 		this.previous = null;
 		this.next = null;
 		this.name = name;
@@ -40,5 +42,9 @@ public class WizardPanel {
 
 	public String getName() {
 		return name;
+	}
+
+	public WizardModel getModel() {
+		return model;
 	}
 }

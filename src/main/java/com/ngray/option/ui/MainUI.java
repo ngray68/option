@@ -136,6 +136,7 @@ public class MainUI {
 	}
 
 	private void showTimeSeriesAnalysisWizard() {
+		/*
 		// test panels
 		JPanel first = new JPanel();
 		first.add(new  JButton("FIRST"));
@@ -153,6 +154,8 @@ public class MainUI {
 		fourthPanel.setPrevious(thirdPanel).setPrevious(secondPanel).setPrevious(firstPanel);   
 		WizardController model = new WizardController(firstPanel);
 		new Wizard(parentFrame, "Volatility Surface Time Series", model).show();
+		*/
+		new VolatilitySurfaceTimeSeriesAnalysisDialog(this).show();
 	}
 
 	private void showVolatilitySurfaceBuildDialog() {

@@ -153,5 +153,11 @@ public class VolatilitySurfaceTimeSeries {
 		}	
 		return timeSeries;
 	}
+
+	public double getMeanImpliedVolatility(double daysToExpiry, double atmOffset) throws TimeSeriesException {
+		TimeSeries<LocalDate> timeSeries = getImpliedVolatilityTimeSeries(daysToExpiry, atmOffset);
+		return timeSeries.getMovingAverage(timeSeries.getSize()).getValue(toDate);
+		
+	}
 	
 }

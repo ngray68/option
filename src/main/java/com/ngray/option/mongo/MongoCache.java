@@ -2,6 +2,7 @@ package com.ngray.option.mongo;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import static com.mongodb.client.model.Filters.*;
 
@@ -92,5 +93,13 @@ public class MongoCache<T extends MongoObject> {
 			put(obj);
 		}
 		return getAll();
+	}
+
+	public void clear() {
+		cache.clear();
+	}
+	
+	public Set<String> getKeys() {
+		return cache.keySet();
 	}
 }

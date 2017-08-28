@@ -15,6 +15,7 @@ import com.ngray.option.ig.refdata.MissingReferenceDataException;
 import com.ngray.option.ig.refdata.OptionReferenceData;
 import com.ngray.option.ig.refdata.OptionReferenceDataMap;
 import com.ngray.option.model.BlackScholesModel;
+import com.ngray.option.mongo.MongoConstants;
 import com.ngray.option.mongo.MongoObject;
 import com.ngray.option.mongo.Price.SnapshotType;
 import com.ngray.option.volatilitysurface.VolatilitySurfaceDataSet.OptionData;
@@ -29,6 +30,17 @@ import com.ngray.option.volatilitysurface.VolatilitySurfaceDataSet.OptionData;
  */
 public class VolatilitySurface implements MongoObject {
 
+	// Mongo object column names
+	public final static String UNIQUE_ID_COL = "UniqueId";
+	public final static String NAME_COL = "Name";
+	public final static String VALUE_DATE_COL = "ValueDate";
+	public final static String SNAPSHOT_TYPE_COL = "SnapshotType";
+	public final static String OPTION_TYPE_COL = "OptionType";
+	public final static String INTERPOLATOR_COL = "Interpolator";
+	public final static String DAYS_TO_EXPIRY_AXIS_COL = "DaysToExpiryAxis";
+	public final static String STRIKE_OFFSET_AXIS_COL = "StrikeOffsetAxis";
+	public final static String IMPLIED_VOLS_COL = "ImpliedVols";
+	
 	//private final VolatilitySurfaceDataSet dataSet;
 	
 	private final String uniqueId;
@@ -271,5 +283,10 @@ public class VolatilitySurface implements MongoObject {
 	
 	public double getMaxStrikeOffset() {
 		return strikeOffsets[strikeOffsets.length - 1];
+	}
+	
+	@Override
+	public String getCollectionName() {
+		return MongoConstants.VOLATILITY_SURFACE_COLLECTION;
 	}
 }

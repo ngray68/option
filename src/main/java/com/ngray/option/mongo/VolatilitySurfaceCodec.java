@@ -30,12 +30,12 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 	@Override
 	public void encode(BsonWriter writer, VolatilitySurface volSurface, EncoderContext context) {
 		Document doc = new Document();
-		doc.put("UniqueId", volSurface.getUniqueId());
-		doc.put("Name", volSurface.getName());
-		doc.put("ValueDate", volSurface.getValueDate().toString());
-		doc.put("SnapshotType", volSurface.getSnapshotType().toString());
-		doc.put("OptionType", volSurface.getOptionType().toString());
-		doc.put("Interpolator", volSurface.getInterpolator().getClass().getName());
+		doc.put(VolatilitySurface.UNIQUE_ID_COL, volSurface.getUniqueId());
+		doc.put(VolatilitySurface.NAME_COL, volSurface.getName());
+		doc.put(VolatilitySurface.VALUE_DATE_COL, volSurface.getValueDate().toString());
+		doc.put(VolatilitySurface.SNAPSHOT_TYPE_COL, volSurface.getSnapshotType().toString());
+		doc.put(VolatilitySurface.OPTION_TYPE_COL, volSurface.getOptionType().toString());
+		doc.put(VolatilitySurface.INTERPOLATOR_COL, volSurface.getInterpolator().getClass().getName());
 		List<Double> daysToExpiry = Arrays.stream(volSurface.getDaysToExpiry()).boxed().collect(Collectors.toList());
 		List<Double> strikeOffsets = Arrays.stream(volSurface.getStrikeOffsets()).boxed().collect(Collectors.toList());
 		List<List<Double>> impliedVols = new ArrayList<>();
@@ -43,9 +43,9 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 		for (double[] impliedVolsRow : impliedVolsArray) {
 			impliedVols.add(Arrays.stream(impliedVolsRow).boxed().collect(Collectors.toList()));
 		}
-		doc.put("DaysToExpiryAxis", daysToExpiry);
-		doc.put("StrikeOffsetAxis", strikeOffsets);
-		doc.put("ImpliedVols", impliedVols);
+		doc.put(VolatilitySurface.DAYS_TO_EXPIRY_AXIS_COL, daysToExpiry);
+		doc.put(VolatilitySurface.STRIKE_OFFSET_AXIS_COL, strikeOffsets);
+		doc.put(VolatilitySurface.IMPLIED_VOLS_COL, impliedVols);
 		documentCodec.encode(writer, doc, context);
 	}
 
@@ -58,21 +58,21 @@ public class VolatilitySurfaceCodec implements Codec<VolatilitySurface> {
 	@Override
 	public VolatilitySurface decode(BsonReader reader, DecoderContext context) {
 		Document doc = documentCodec.decode(reader, context);
-		String uniqueId = doc.getString("UniqueId");
-		String name = doc.getString("Name");
-		LocalDate valueDate = LocalDate.parse(doc.getString("ValueDate"));
-		SnapshotType snapshotType = SnapshotType.fromString(doc.getString("SnapshotType"));
-		Type optionType = Type.fromString(doc.getString("OptionType"));
+		String uniqueId = doc.getString(VolatilitySurface.UNIQUE_ID_COL);
+		String name = doc.getString(VolatilitySurface.NAME_COL);
+		LocalDate valueDate = LocalDate.parse(doc.getString(VolatilitySurface.VALUE_DATE_COL));
+		SnapshotType snapshotType = SnapshotType.fromString(doc.getString(VolatilitySurface.SNAPSHOT_TYPE_COL));
+		Type optionType = Type.fromString(doc.getString(VolatilitySurface.OPTION_TYPE_COL));
 		BivariateGridInterpolator interpolator = null;
 		try {
-			interpolator = (BivariateGridInterpolator)Class.forName(doc.getString("Interpolator")).newInstance();
+			interpolator = (BivariateGridInterpolator)Class.forName(doc.getString(VolatilitySurface.INTERPOLATOR_COL)).newInstance();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
 			Log.getLogger().error(e.getMessage(), e);
 		}
 		
-		List<Double> daysToExpiryList = (List<Double>)doc.get("DaysToExpiryAxis");
-		List<Double> strikeOffsetsList = (List<Double>)doc.get("StrikeOffsetAxis");
-		List<List<Double>> impliedVolsList = (List<List<Double>>)doc.get("ImpliedVols");
+		List<Double> daysToExpiryList = (List<Double>)doc.get(VolatilitySurface.DAYS_TO_EXPIRY_AXIS_COL);
+		List<Double> strikeOffsetsList = (List<Double>)doc.get(VolatilitySurface.STRIKE_OFFSET_AXIS_COL);
+		List<List<Double>> impliedVolsList = (List<List<Double>>)doc.get(VolatilitySurface.IMPLIED_VOLS_COL);
 		double[] daysToExpiry = daysToExpiryList.stream().mapToDouble(Double::doubleValue).toArray();
 		double[] strikeOffsets = strikeOffsetsList.stream().mapToDouble(Double::doubleValue).toArray();
 		double[][] impliedVols = new double[impliedVolsList.size()][];

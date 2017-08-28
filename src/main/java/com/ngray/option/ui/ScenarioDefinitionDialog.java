@@ -21,6 +21,8 @@ import com.ngray.option.analysis.scenario.ScenarioDefinition;
 import com.ngray.option.analysis.scenario.ScenarioDefinition.Type;
 import com.ngray.option.analysis.scenario.UnderlyingPriceScenario;
 import com.ngray.option.financialinstrument.FinancialInstrument;
+import com.ngray.option.ui.components.DocumentAdapter;
+
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -237,7 +239,7 @@ public class ScenarioDefinitionDialog {
 		parentUI.getScenarioView().show();
 	}
 	
-	// Adapter to simplify listeners for text fields
+	/*// Adapter to simplify listeners for text fields
 	public abstract class DocumentAdapter implements DocumentListener {
 
 		public abstract void update(DocumentEvent e);
@@ -257,7 +259,7 @@ public class ScenarioDefinitionDialog {
 			update(e);
 		}
 		
-	}
+	}*/
 	// Adapter to show a friendly name for securities in the underlyings dialog box
 	public class NameAdapter {
 			

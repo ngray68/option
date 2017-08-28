@@ -44,9 +44,14 @@ public class Wizard {
 		});
 	}
 	
+	public void setNextEnabledIfNextExists(boolean state) {
+		if (controller.getNextPanel() == null) return;
+		this.next.setEnabled(state);
+	}
+
 	private void initDialog() {
 		back.setEnabled(false);
-		next.setEnabled(true);
+		next.setEnabled(false);
 		finish.setEnabled(false);
 		cancel.setEnabled(true);
 		dialog.setLayout(new MigLayout("", "[][][][]", "[][]"));
@@ -59,18 +64,43 @@ public class Wizard {
 		 
 		((CardLayout)panel.getLayout()).show(panel, controller.getRootPanel().getName());
 		dialog.add(panel, "cell 0 0, span, grow");
-		dialog.add(back, "cell 0 1,grow");
-		dialog.add(next, "cell 1 1,grow");
-		dialog.add(finish, "cell 2 1,grow");
-		dialog.add(cancel, "cell 3 1,grow");
+		dialog.add(back, "cell 0 1");
+		dialog.add(next, "cell 1 1");
+		dialog.add(finish, "cell 2 1");
+		dialog.add(cancel, "cell 3 1");
 		dialog.pack();
 	}
 	
     private void addListeners() {
-    	back.addActionListener(event -> showPanel(controller.getPreviousPanel()));
-    	next.addActionListener(event -> showPanel(controller.getNextPanel()));
-    	
+    	back.addActionListener(event -> onBack());
+    	next.addActionListener(event -> onNext());
+    	finish.addActionListener(event -> onFinish());
     	cancel.addActionListener(event -> dialog.dispose());
+    }
+    
+    private void onFinish() {
+    	WizardPanel curr = controller.getCurrentPanel();
+    	WizardModel model = curr.getModel();
+    	if(model != null) model.onFinish();
+    	dialog.dispose();
+	}
+
+	private void onBack() {
+    	WizardPanel from = controller.getCurrentPanel();
+    	WizardPanel to = from.getPrevious();
+    	WizardModel model = from.getModel();
+    	if(model != null) model.onBack();
+    	controller.setCurrentPanel(to);
+    	showPanel(to);
+    }
+    
+    private void onNext() {
+    	WizardPanel from = controller.getCurrentPanel();
+    	WizardPanel to = from.getNext();
+    	WizardModel model = from.getModel();
+    	if(model != null) model.onNext();
+    	controller.setCurrentPanel(to);
+    	showPanel(to);
     }
     
     private void showPanel(WizardPanel newPanel) {
@@ -88,6 +118,13 @@ public class Wizard {
     	}
     	
     	controller.setCurrentPanel(newPanel);
+    	WizardModel model = newPanel.getModel();
+    	if (model != null) model.onShow();
     	((CardLayout)panel.getLayout()).show(panel, newPanel.getName());
+    	dialog.pack();
     }
+
+	public void setFinishEnabled(boolean state) {
+		finish.setEnabled(state);
+	}
 }
