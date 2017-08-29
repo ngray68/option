@@ -4,9 +4,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.ngray.option.Log;
-import com.ngray.option.analysis.timeseries.TimeSeriesException;
-import com.ngray.option.analysis.timeseries.VolatilitySurfaceTimeSeries;
+import javax.swing.JFrame;
+
+import com.ngray.option.analysis.timeseries.VolatilitySurfaceTimeSeriesStatistics;
+import com.ngray.option.ui.components.Wizard;
 import com.ngray.option.ui.components.WizardModel;
 
 public class AnalysisOptionsWizardModel implements WizardModel {
@@ -17,20 +18,24 @@ public class AnalysisOptionsWizardModel implements WizardModel {
 	private boolean calcMaxValue;
 	private boolean calcMinValue;
 	private boolean calcMean;
-	private Set<Integer> movingAverages;
+	private boolean calcFiveDay;
+	private boolean calcThirtyDay;
+	private boolean calcNinetyDay;
 	private VolatilitySurfaceChooserWizardModel volSurfaceChooserModel;
+	private JFrame parentFrame;
+	
 	
 	// If I were writing  wizard framework I would create a WizardData interface which wizards
 	// would implement to allow all WizardModels access to all data but all I need here is for
 	// the current model to access the vol surface choice data onFinish
-	public AnalysisOptionsWizardModel(VolatilitySurfaceChooserWizardModel volSurfaceChooserModel) {
+	public AnalysisOptionsWizardModel(JFrame parentFrame, VolatilitySurfaceChooserWizardModel volSurfaceChooserModel) {
 		this.volSurfaceChooserModel = volSurfaceChooserModel;
 		setDaysToExpiry(Double.NaN);
 		setCalcMaxValue(false);
 		setCalcMinValue(false);
 		setCalcMean(false);
 		atmOffsets = new HashSet<>();
-		movingAverages = new HashSet<>();
+		this.parentFrame = parentFrame;
 	}
 	
 	@Override
@@ -39,7 +44,7 @@ public class AnalysisOptionsWizardModel implements WizardModel {
 		// and at least one of calcMaxValue|calcMinValue|calcMean is true
 		// or there is at least one moving average chosen
 		return  (!Double.isNaN(daysToExpiry) && !atmOffsets.isEmpty()) &&
-				       (calcMaxValue || calcMinValue || calcMean ||  !movingAverages.isEmpty());
+				       (calcMaxValue || calcMinValue || calcMean ||  calcFiveDay || calcThirtyDay || calcNinetyDay);
 	}
 
 	@Override
@@ -60,34 +65,21 @@ public class AnalysisOptionsWizardModel implements WizardModel {
 	@Override
 	public void onFinish() {
 		// we create a time series for all the vol surfaces and calculate all the chosen metrics
-		try {
-			VolatilitySurfaceTimeSeries volSurfaceTimeSeries 
-					= VolatilitySurfaceTimeSeries.create(
-									volSurfaceChooserModel.getVolatilitySurfaceName(), 
-									volSurfaceChooserModel.getSnapshotType(),
-									volSurfaceChooserModel.getFromDate(),
-									volSurfaceChooserModel.getToDate()
-								);
-			for (double atmOffset : atmOffsets) {
-				if (calcMinValue) {
-					double min = volSurfaceTimeSeries.getImpliedVolatilityMinValue(daysToExpiry, atmOffset);
-					System.out.println("Min=" + min);
-				}
-				if (calcMaxValue) {
-					double max = volSurfaceTimeSeries.getImpliedVolatilityMaxValue(daysToExpiry, atmOffset);
-					System.out.println("Max=" + max);
-				}
-				if (calcMean) {
-					double mean = volSurfaceTimeSeries.getMeanImpliedVolatility(daysToExpiry, atmOffset);
-					System.out.println("Mean=" + mean);
-				}
-			}
-			
-			
-		} catch (TimeSeriesException e) {
-			Log.getLogger().error(e.getMessage(), e);
-			// TODO : UI work here
-		}
+		VolatilitySurfaceTimeSeriesStatistics stats = new VolatilitySurfaceTimeSeriesStatistics(
+				volSurfaceChooserModel.getVolatilitySurfaceName(),
+				volSurfaceChooserModel.getSnapshotType(),
+				volSurfaceChooserModel.getFromDate(),
+				volSurfaceChooserModel.getToDate(),
+				calcMinValue,
+				calcMaxValue,
+				calcMean,
+				calcFiveDay,
+				calcThirtyDay,
+				calcNinetyDay,
+				atmOffsets,
+				daysToExpiry);
+		stats.evaluate();
+		new VolatilitySurfaceTimeSeriesStatisticsViewer(parentFrame, stats).show();
 	}
 
 	public boolean getCalcMaxValue() {
@@ -114,17 +106,31 @@ public class AnalysisOptionsWizardModel implements WizardModel {
 		this.calcMean = calcMean;
 	}
 
-	public Set<Integer> getMovingAverages() {
-		return Collections.unmodifiableSet(movingAverages);
+	public boolean getCalcFiveDay() {
+		return calcFiveDay;
 	}
 
-	public void addMovingAverage(int movingAverage) {
-		movingAverages.add(movingAverage);
+	public void setCalcFiveDay(boolean calcFiveDay) {
+		this.calcFiveDay = calcFiveDay;
 	}
 	
-	public void removeMovingAverage(int movingAverage) {
-		movingAverages.remove(movingAverage);
+	public boolean getCalcThirtyDay() {
+		return calcThirtyDay;
 	}
+
+	public void setCalcThirtyDay(boolean calcThirtyDay) {
+		this.calcThirtyDay = calcThirtyDay;
+	}
+	
+	public boolean getCalcNinetyDay() {
+		return calcNinetyDay;
+	}
+
+	public void setCalcNinetyDay(boolean calcNinetyDay) {
+		this.calcNinetyDay = calcNinetyDay;
+	}
+
+	
 
 	public Set<Double> getAtmOffsets() {
 		return Collections.unmodifiableSet(atmOffsets);

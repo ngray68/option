@@ -1,6 +1,5 @@
 package com.ngray.option.ui;
 
-import com.ngray.option.Log;
 import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.MongoConstants;
 import com.ngray.option.mongo.Price.SnapshotType;
@@ -137,7 +136,7 @@ public class VolatilitySurfaceTimeSeriesAnalysisDialog {
 		analysisPanel.add(thirtyDay, "cell 1 7");
 		analysisPanel.add(ninetyDay, "cell 2 7");
 		
-		analysisOptionsModel = new AnalysisOptionsWizardModel(volSurfaceChooserModel);
+		analysisOptionsModel = new AnalysisOptionsWizardModel(parentUI.getParentFrame(), volSurfaceChooserModel);
 		addAnalysisPanelListeners();
 	}
 
@@ -270,29 +269,18 @@ public class VolatilitySurfaceTimeSeriesAnalysisDialog {
 	}
 
 	private void setNinetyDayMovingAverage(boolean selected) {
-		if (selected) {
-			analysisOptionsModel.addMovingAverage(90);
-		} else {
-			analysisOptionsModel.removeMovingAverage(90);
-		}
-		wizard.setFinishEnabled(analysisOptionsModel.validate());
+		analysisOptionsModel.setCalcNinetyDay(selected);
+		wizard.setFinishEnabled(analysisOptionsModel.validate());	
 	}
 
 	private void setThirtyDayMovingAverage(boolean selected) {
-		if (selected) {
-			analysisOptionsModel.addMovingAverage(30);
-		} else {
-			analysisOptionsModel.removeMovingAverage(30);
-		}
-		wizard.setFinishEnabled(analysisOptionsModel.validate());	}
+		analysisOptionsModel.setCalcThirtyDay(selected);
+		wizard.setFinishEnabled(analysisOptionsModel.validate());	
+	}
 
 	private void setFiveDayMovingAverage(boolean selected) {
-		if (selected) {
-			analysisOptionsModel.addMovingAverage(5);
-		} else {
-			analysisOptionsModel.removeMovingAverage(5);
-		}
-		wizard.setFinishEnabled(analysisOptionsModel.validate());
+		analysisOptionsModel.setCalcFiveDay(selected);
+		wizard.setFinishEnabled(analysisOptionsModel.validate());	
 	}
 
 	private void setMean(boolean selected) {
