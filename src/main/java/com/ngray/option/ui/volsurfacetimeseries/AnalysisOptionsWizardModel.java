@@ -79,7 +79,8 @@ public class AnalysisOptionsWizardModel implements WizardModel {
 				atmOffsets,
 				daysToExpiry);
 		stats.evaluate();
-		new VolatilitySurfaceTimeSeriesStatisticsViewer(parentFrame, stats).show();
+		VolatilitySurfaceTimeSeriesStatisticsViewer viewer = new VolatilitySurfaceTimeSeriesStatisticsViewer(parentFrame, stats);
+		viewer.show();
 	}
 
 	public boolean getCalcMaxValue() {

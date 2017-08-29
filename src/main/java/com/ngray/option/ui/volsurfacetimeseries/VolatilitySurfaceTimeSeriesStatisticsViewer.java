@@ -1,35 +1,30 @@
 package com.ngray.option.ui.volsurfacetimeseries;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.border.Border;
-
 import org.jzy3d.chart.Chart;
-import org.jzy3d.chart.ChartLauncher;
 import org.jzy3d.chart2d.Chart2d;
 import org.jzy3d.colors.Color;
-import org.jzy3d.maths.Coord2d;
 import org.jzy3d.plot2d.primitives.Serie2d;
-import org.jzy3d.plot3d.primitives.axes.layout.providers.ITickProvider;
 import org.jzy3d.plot3d.primitives.axes.layout.renderers.DateTickRenderer;
 
 import com.ngray.option.Log;
 import com.ngray.option.analysis.timeseries.TimeSeries;
 import com.ngray.option.analysis.timeseries.VolatilitySurfaceTimeSeriesStatistics;
 import com.ngray.option.ui.Frames;
+import net.miginfocom.swing.MigLayout;
 
 public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 	
@@ -40,39 +35,67 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 	public VolatilitySurfaceTimeSeriesStatisticsViewer(JFrame parentFrame, VolatilitySurfaceTimeSeriesStatistics statistics) {
 		this.parentFrame = parentFrame;
 		this.statistics = statistics;
-		create();
+		//create();
 	}
 	
 	public void show() {
-		EventQueue.invokeLater(()-> {
-			try {
-				frame.setVisible(true);
-			} catch (HeadlessException e) {
-				Log.getLogger().error(e.getMessage(), e);
-			}
-		});
-	}
-	
-	private void create() {
-		String title = statistics.getVolatilitySurfaceName() + ": Days to Expiry=" + statistics.getDaysToExpiry();
-		JInternalFrame frame = createFrame(title, statistics);
+		String title = statistics.getVolatilitySurfaceName() + ":" + statistics.getSnapshotType() + ": " + "Days to Expiry=" + statistics.getDaysToExpiry();
+		frame = createFrame(title, statistics);
 		parentFrame.add(frame);	
 	}
 
 	private JInternalFrame createFrame(String title, VolatilitySurfaceTimeSeriesStatistics statistics) {
-		JPanel panel = new JPanel(new GridLayout(0,1));
+		JPanel panel = new JPanel(new MigLayout("", "[grow]", "[][][][]"));
 		
-		// table of summary data
+		// table of calculated summary data
+		panel.add(new JLabel("Summary"), "cell 0 0");
 		String[] columnNames = { "Strike(-ATM)", "Mean IV", "Min IV", "Max IV" };
 		Object[][] data = getSummaryData(statistics, columnNames.length);
 		JTable summaryTable = new JTable(data, columnNames);
+		summaryTable.setPreferredScrollableViewportSize(
+				new Dimension(summaryTable.getPreferredSize().width, summaryTable.getRowHeight() * (1 + summaryTable.getRowCount()))
+				);
 		JScrollPane scrollPane = new JScrollPane(summaryTable);
-		panel.add(scrollPane);
+		panel.add(scrollPane, "cell 0 1");
 		
-		Chart chart = createMovingAverageGraph(statistics);
+		// moving averages
+		panel.add(new JLabel("Moving Average IV"), "cell 0 2");
+		createMovingAverageTables(panel, statistics);
+		
+		//Chart chart = createMovingAverageGraph(statistics);
 		JInternalFrame frame = Frames.createJInternalFrame(title, null, panel);
-		ChartLauncher.openChart(chart);
+		//ChartLauncher.openChart(chart);
 		return frame;
+	}
+
+	private void createMovingAverageTables(JPanel panel, VolatilitySurfaceTimeSeriesStatistics statistics) {
+		
+		JTabbedPane tabbedPane = new JTabbedPane();
+		String[] columnNames = new String[] { "ValueDate", "Actual", "5-day", "30-day", "90-day" };
+		for (Double atmOffset : statistics.getAtmOffsets()) {
+			Object[][] data = getMovingAverages(atmOffset, statistics, columnNames.length);
+			JTable table = new JTable(data, columnNames);
+			tabbedPane.add("ATM+" + atmOffset, new JScrollPane(table));
+		}
+		panel.add(tabbedPane, "cell 0 3");
+	}
+
+	private Object[][] getMovingAverages(Double atmOffset, VolatilitySurfaceTimeSeriesStatistics statistics, int numColumns) {
+		TimeSeries<LocalDate> actuals = statistics.getMovingAverage(atmOffset, 1);
+		TimeSeries<LocalDate> fiveDay = statistics.getMovingAverage(atmOffset, VolatilitySurfaceTimeSeriesStatistics.FIVE_DAY);
+		TimeSeries<LocalDate> thirtyDay = statistics.getMovingAverage(atmOffset, VolatilitySurfaceTimeSeriesStatistics.THIRTY_DAY);
+		TimeSeries<LocalDate> ninetyDay = statistics.getMovingAverage(atmOffset, VolatilitySurfaceTimeSeriesStatistics.NINETY_DAY);
+		Object[][] data = new Object[actuals.getSize()][numColumns];
+		int row = 0;
+		for (LocalDate date : actuals.getTimePoints()) {
+			data[row][0] = date;
+			data[row][1] = actuals.getValue(date);
+			data[row][2] = fiveDay.getValue(date);
+			data[row][3] = thirtyDay.getValue(date);
+			data[row][4] = ninetyDay.getValue(date);
+			++row;
+		}
+		return data;
 	}
 
 	private Chart createMovingAverageGraph(VolatilitySurfaceTimeSeriesStatistics statistics) {

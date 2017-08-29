@@ -54,7 +54,7 @@ public class TimeSeries<K extends Comparable<? super K>> {
 	 * @param timePoint
 	 * @return
 	 */
-	public double getValue(K timePoint) {
+	public Double getValue(K timePoint) {
 		return data.get(timePoint);
 	}
 	
