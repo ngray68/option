@@ -6,12 +6,12 @@ import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
 
 import java.time.LocalDate;
-
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.ngray.option.Log;
+import com.ngray.option.financialinstrument.EuropeanOption.Type;
 import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.MongoCache;
 import com.ngray.option.mongo.MongoCacheRegistry;
@@ -27,6 +27,7 @@ public class VolatilitySurfaceChooserWizardModel implements WizardModel {
 	private LocalDate fromDate;
 	private LocalDate toDate;
 	private SnapshotType snapshotType;
+	private Type optionType;
 	
 	public VolatilitySurfaceChooserWizardModel() {
 	}
@@ -58,13 +59,15 @@ public class VolatilitySurfaceChooserWizardModel implements WizardModel {
 			Bson filter = and(eq(VolatilitySurface.NAME_COL, volSurfaceName), gte(VolatilitySurface.VALUE_DATE_COL, fromDate.toString()), lte(VolatilitySurface.VALUE_DATE_COL, toDate.toString()));
 			MongoCursor<VolatilitySurface> cursor = volSurfaceCollection.find(filter).iterator();
 			while(cursor.hasNext()) {
-				cache.put(cursor.next());
+				VolatilitySurface surface = cursor.next();
+				cache.put(surface);
+				setOptionType(surface.getOptionType());
 			}
 		} catch (MongoCacheRegistryException e) {
 			Log.getLogger().error(e.getMessage(), e);
 		}
 	}
-	
+
 	@Override
 	public void onShow() {
 		// do nothing
@@ -106,5 +109,13 @@ public class VolatilitySurfaceChooserWizardModel implements WizardModel {
 	
 	public LocalDate getToDate() {
 		return toDate;
+	}
+
+	public Type getOptionType() {
+		return optionType;
+	}
+	
+	private void setOptionType(Type optionType) {
+		this.optionType = optionType;
 	}
 }

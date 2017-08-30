@@ -1,8 +1,6 @@
 package com.ngray.option.ui.volsurfacetimeseries;
 
 import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.HeadlessException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -15,12 +13,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import org.jzy3d.chart.Chart;
+import org.jzy3d.chart.ChartLauncher;
 import org.jzy3d.chart2d.Chart2d;
 import org.jzy3d.colors.Color;
 import org.jzy3d.plot2d.primitives.Serie2d;
-import org.jzy3d.plot3d.primitives.axes.layout.renderers.DateTickRenderer;
+import org.jzy3d.plot3d.primitives.axes.AxeBox;
+import org.jzy3d.plot3d.primitives.axes.layout.renderers.ITickRenderer;
+import org.jzy3d.plot3d.text.renderers.TextBitmapRenderer;
 
-import com.ngray.option.Log;
+import com.jogamp.opengl.util.gl2.GLUT;
 import com.ngray.option.analysis.timeseries.TimeSeries;
 import com.ngray.option.analysis.timeseries.VolatilitySurfaceTimeSeriesStatistics;
 import com.ngray.option.ui.Frames;
@@ -62,9 +63,9 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 		panel.add(new JLabel("Moving Average IV"), "cell 0 2");
 		createMovingAverageTables(panel, statistics);
 		
-		//Chart chart = createMovingAverageGraph(statistics);
+		Chart chart = createMovingAverageGraph(statistics);
+		ChartLauncher.openChart(chart);
 		JInternalFrame frame = Frames.createJInternalFrame(title, null, panel);
-		//ChartLauncher.openChart(chart);
 		return frame;
 	}
 
@@ -75,7 +76,11 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 		for (Double atmOffset : statistics.getAtmOffsets()) {
 			Object[][] data = getMovingAverages(atmOffset, statistics, columnNames.length);
 			JTable table = new JTable(data, columnNames);
-			tabbedPane.add("ATM+" + atmOffset, new JScrollPane(table));
+			String tabTitle = null;
+			if (Double.compare(atmOffset, 0) == 0) tabTitle = "ATM";
+			if (Double.compare(atmOffset, 0) < 0) tabTitle = "ATM" + atmOffset;
+			if (Double.compare(atmOffset, 0) > 0) tabTitle = "ATM+" + atmOffset; 
+			tabbedPane.add(tabTitle, new JScrollPane(table));
 		}
 		panel.add(tabbedPane, "cell 0 3");
 	}
@@ -101,14 +106,31 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 	private Chart createMovingAverageGraph(VolatilitySurfaceTimeSeriesStatistics statistics) {
 		
 		Chart2d chart = new Chart2d();
-		chart.getAxeLayout().setXTickRenderer(new DateTickRenderer("dd/MM/yy"));
+		chart.getAxeLayout().setXTickRenderer(new ITickRenderer() {
+
+			@Override
+			public String format(double value) {	
+				LocalDate date = LocalDate.ofEpochDay((long)value);
+				String str = date.toString();
+				return str;
+			}});
+		((AxeBox)chart.getView().getAxe()).setTextRenderer(new TextBitmapRenderer()  {
+			{
+	          font = GLUT.BITMAP_HELVETICA_18;
+	          fontHeight = 18;
+			}
+        });
+		chart.getAxeLayout().setXAxeLabel("Value Date");
+		chart.getAxeLayout().setYAxeLabel("Implied Volatility");
 		
 		for (double atmOffset : statistics.getAtmOffsets()) {
 			{
 				TimeSeries<LocalDate> actual = statistics.getMovingAverage(atmOffset, 1);
 				List<LocalDate> timePoints = actual.getTimePoints();
 				Serie2d serie = chart.getSerie("Actual", Serie2d.Type.LINE);
-				timePoints.forEach(timePoint -> serie.add(timePoint.toEpochDay(), actual.getValue(timePoint)));
+				timePoints.forEach(timePoint ->
+				  { long days = timePoint.toEpochDay(); 
+				    serie.add(days, actual.getValue(timePoint)); });
 				serie.setColor(Color.BLACK);
 			}
 			{

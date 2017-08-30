@@ -1,9 +1,9 @@
 package com.ngray.option.ui;
 
+import com.ngray.option.financialinstrument.EuropeanOption.Type;
 import com.ngray.option.mongo.Mongo;
 import com.ngray.option.mongo.MongoConstants;
 import com.ngray.option.mongo.Price.SnapshotType;
-import com.ngray.option.ui.components.DocumentAdapter;
 import com.ngray.option.ui.components.Wizard;
 import com.ngray.option.ui.components.WizardController;
 import com.ngray.option.ui.components.WizardPanel;
@@ -11,6 +11,9 @@ import com.ngray.option.ui.volsurfacetimeseries.AnalysisOptionsWizardModel;
 import com.ngray.option.ui.volsurfacetimeseries.VolatilitySurfaceChoiceReviewWizardModel;
 import com.ngray.option.ui.volsurfacetimeseries.VolatilitySurfaceChooserWizardModel;
 import com.ngray.option.volatilitysurface.VolatilitySurface;
+
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -23,8 +26,6 @@ import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-
 import org.jdatepicker.DateModel;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
@@ -220,14 +221,16 @@ public class VolatilitySurfaceTimeSeriesAnalysisDialog {
 				e -> setITMOffsetField(analyzeITM.isSelected())
 			);
 		
-		daysToExpiry.getDocument().addDocumentListener(
-				new DocumentAdapter() {
+		daysToExpiry.addFocusListener(new FocusListener() {
+				@Override
+				public void focusGained(FocusEvent e) {
+					// do nothing
+				}
 
-					@Override
-					public void update(DocumentEvent e) {
-						setDaysToExpiry(daysToExpiry.getText());
-					}}
-			);
+				@Override
+				public void focusLost(FocusEvent e) {
+					setDaysToExpiry(daysToExpiry.getText());		
+			}});
 		
 		maxValue.addActionListener(
 				e -> setMaxValue(maxValue.isSelected())
@@ -253,14 +256,125 @@ public class VolatilitySurfaceTimeSeriesAnalysisDialog {
 				e -> setNinetyDayMovingAverage(ninetyDay.isSelected())
 			);
 		
-		// TODO the OTM/ITM offset fields
+		otmOffset.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				// do nothing
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				addOtmOffset(otmOffset.getText());		
+		}});
+		
+		itmOffset.addFocusListener(new FocusListener() {
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				// do nothing
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				addItmOffset(itmOffset.getText());		
+		}});
+	}
 	
+	private void addOtmOffset(String doubleStr) {
+		if (doubleStr == null) return;
+		try {
+			 double value = Double.parseDouble(doubleStr);
+			 if (Double.compare(value, 0) < 0) {
+				 otmOffset.setText("Enter a +ve number");
+				 return;
+			 }
+			 if (volSurfaceChooserModel.getOptionType().equals(Type.PUT)) {
+				 value = -value;
+				 if (Double.compare(volSurfaceChoiceReviewModel.getAtmOffsetMin(), 0) > 0) {
+					 otmOffset.setText("Can't analyze OTM options for these vol surfaces");
+				 }
+				 if (Double.compare(value, volSurfaceChoiceReviewModel.getAtmOffsetMin()) < 0	) {
+					   otmOffset.setText("Range: 0.0 to " + Math.abs(volSurfaceChoiceReviewModel.getAtmOffsetMin()));
+					   return;
+				 } 
+			} else {
+				 if (Double.compare(volSurfaceChoiceReviewModel.getAtmOffsetMax(), 0) < 0) {
+					 otmOffset.setText("Can't analyze OTM options for these vol surfaces");
+				 }
+				 if (Double.compare(value, volSurfaceChoiceReviewModel.getAtmOffsetMax()) > 0	) {
+					   otmOffset.setText("Range: 0.0 to " + Math.abs(volSurfaceChoiceReviewModel.getAtmOffsetMax()));
+					   return;
+				 }
+			 }
+			 
+			 if (volSurfaceChooserModel.getOptionType().equals(Type.CALL)) {
+				 // OTM is +ve offset
+				 analysisOptionsModel.removeAtmOffsetIf(val -> Double.compare(val, 0) > 0);	 
+			 } else {
+				 // for Puts, its -ve offset
+				 analysisOptionsModel.removeAtmOffsetIf(val -> Double.compare(val, 0) < 0);
+			 }
+			 analysisOptionsModel.addAtmOffset(value);
+		} catch (NumberFormatException e) {
+			// we can throw this away silently
+	    	// will occur if user enters non-numeric data - which we can ignore
+		}
+	}
+	
+	private void addItmOffset(String doubleStr) {
+		if (doubleStr == null) return;
+		try {
+			 double value = Double.parseDouble(doubleStr);
+			 if (Double.compare(value, 0) < 0) {
+				 itmOffset.setText("Enter a +ve number");
+				 return;
+			 }
+			 if (volSurfaceChooserModel.getOptionType().equals(Type.CALL)) {
+				 value = -value;
+				 if (Double.compare(volSurfaceChoiceReviewModel.getAtmOffsetMin(), 0) > 0) {
+					 itmOffset.setText("Can't analyze OTM options for these vol surfaces");
+				 }
+				 if (Double.compare(value, volSurfaceChoiceReviewModel.getAtmOffsetMin()) < 0	) {
+					 itmOffset.setText("Range: 0.0 to " + Math.abs(volSurfaceChoiceReviewModel.getAtmOffsetMin()));
+					  return;
+				 } 
+			} else {
+				 if (Double.compare(volSurfaceChoiceReviewModel.getAtmOffsetMax(), 0) < 0) {
+					 itmOffset.setText("Can't analyze OTM options for these vol surfaces");
+				 }
+				 if (Double.compare(value, volSurfaceChoiceReviewModel.getAtmOffsetMax()) > 0	) {
+					 itmOffset.setText("Range: 0.0 to " + Math.abs(volSurfaceChoiceReviewModel.getAtmOffsetMax()));
+					 return;
+				 }
+			 }
+			 if (volSurfaceChooserModel.getOptionType().equals(Type.CALL)) {
+				 // ITM is -ve offset
+				 analysisOptionsModel.removeAtmOffsetIf(val -> Double.compare(val, 0) < 0);				
+			 } else {
+				 // for Puts, its +ve offset
+				 analysisOptionsModel.removeAtmOffsetIf(val -> Double.compare(val, 0) > 0);
+			 }
+			 analysisOptionsModel.addAtmOffset(value);
+		} catch (NumberFormatException e) {
+			// we can throw this away silently
+	    	// will occur if user enters non-numeric data - which we can ignore
+		}
 	}
 
 	private void setDaysToExpiry(String text) {
 		if (text == null) return;
 		try {
 	        double value = Double.parseDouble(text);
+	        if (Double.compare(value, 0) < 0) {
+				 daysToExpiry.setText("Enter a +ve number");
+				 return;
+			}
+	        if (Double.compare(value, volSurfaceChoiceReviewModel.getDaysToExpiryMax()) > 0 ||
+	        	Double.compare(value, volSurfaceChoiceReviewModel.getDaysToExpiryMin()) < 0	) {
+	        	daysToExpiry.setText("Range: " + volSurfaceChoiceReviewModel.getDaysToExpiryMin() + " to " + volSurfaceChoiceReviewModel.getDaysToExpiryMax());
+	        	return;
+	        }
 	        analysisOptionsModel.setDaysToExpiry(value);
 	    } catch (NumberFormatException e) {
 	        // we can throw this away silently

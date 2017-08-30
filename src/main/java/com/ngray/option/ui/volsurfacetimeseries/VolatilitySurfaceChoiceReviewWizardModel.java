@@ -1,6 +1,8 @@
 package com.ngray.option.ui.volsurfacetimeseries;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -19,8 +21,18 @@ public class VolatilitySurfaceChoiceReviewWizardModel implements WizardModel {
 
 	private final JPanel panel;
 	
+	// store the ranges of the coordinates valid for all instances of the vol surface across the time series
+	private double daysToExpiryMin;
+	private double daysToExpiryMax;
+	private double atmOffsetMin;
+	private double atmOffsetMax;
+	
 	public VolatilitySurfaceChoiceReviewWizardModel(JPanel panel) {
 		this.panel = panel;
+		daysToExpiryMin = 0.0;
+		daysToExpiryMax = Double.POSITIVE_INFINITY;
+		atmOffsetMin = Double.NEGATIVE_INFINITY;
+		atmOffsetMax = Double.POSITIVE_INFINITY;
 	}
 	@Override
 	public boolean validate() {
@@ -53,6 +65,22 @@ public class VolatilitySurfaceChoiceReviewWizardModel implements WizardModel {
 	public void onFinish() {
 		// do nothing
 	}
+	
+	public double getDaysToExpiryMin() {
+		return daysToExpiryMin;
+	}
+	
+	public double getDaysToExpiryMax() {
+		return daysToExpiryMax;
+	}
+	
+	public double getAtmOffsetMax() {
+		return atmOffsetMax;
+	}
+	
+	public double getAtmOffsetMin() {
+		return atmOffsetMin;
+	}
 
 	private Object[][] getChosenVolSurfaces(String[] columnNames) {
 		try {
@@ -69,12 +97,34 @@ public class VolatilitySurfaceChoiceReviewWizardModel implements WizardModel {
 				result[row][2] = thisSurface.getOptionType();
 				result[row][3] = thisSurface.getSnapshotType();
 				++row;
+				
+				updateMinMaxValues(thisSurface);
 			}
 			
 			return result;
 		} catch (MongoCacheRegistryException e) {
 			Log.getLogger().error(e.getMessage(), e);
 			return null;
+		}
+	}
+	
+	private void updateMinMaxValues(VolatilitySurface thisSurface) {
+		OptionalDouble maxDaysToExpiry = Arrays.stream(thisSurface.getDaysToExpiry()).max();
+		OptionalDouble minDaysToExpiry = Arrays.stream(thisSurface.getDaysToExpiry()).min();
+		if (maxDaysToExpiry.isPresent() && Double.compare(maxDaysToExpiry.getAsDouble(), this.daysToExpiryMax) < 0) {
+				this.daysToExpiryMax = maxDaysToExpiry.getAsDouble();
+		}
+		if (minDaysToExpiry.isPresent() && Double.compare(minDaysToExpiry.getAsDouble(), this.daysToExpiryMin) > 0) {
+			this.daysToExpiryMin = minDaysToExpiry.getAsDouble();
+		}
+		
+		OptionalDouble maxAtmOffset = Arrays.stream(thisSurface.getStrikeOffsets()).max();
+		OptionalDouble minAtmOffset = Arrays.stream(thisSurface.getStrikeOffsets()).min();
+		if (maxAtmOffset.isPresent() && Double.compare(maxAtmOffset.getAsDouble(), this.atmOffsetMax) < 0) {
+			this.atmOffsetMax = maxAtmOffset.getAsDouble();
+		}
+		if (minAtmOffset.isPresent() && Double.compare(minAtmOffset.getAsDouble(), this.atmOffsetMin) > 0) {
+			this.atmOffsetMin = minAtmOffset.getAsDouble();
 		}
 	}
 }

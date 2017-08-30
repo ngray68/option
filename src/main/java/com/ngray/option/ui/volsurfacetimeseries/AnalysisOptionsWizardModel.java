@@ -3,11 +3,11 @@ package com.ngray.option.ui.volsurfacetimeseries;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.swing.JFrame;
 
 import com.ngray.option.analysis.timeseries.VolatilitySurfaceTimeSeriesStatistics;
-import com.ngray.option.ui.components.Wizard;
 import com.ngray.option.ui.components.WizardModel;
 
 public class AnalysisOptionsWizardModel implements WizardModel {
@@ -152,4 +152,8 @@ public class AnalysisOptionsWizardModel implements WizardModel {
 	public void removeAtmOffset(double atmOffset) {
 		atmOffsets.remove(atmOffset);
 	}	
+	
+	public void removeAtmOffsetIf(Predicate<? super Double> condition) {
+		atmOffsets.removeIf(condition);
+	}
 }
