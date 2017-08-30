@@ -114,7 +114,7 @@ public class VolatilitySurfaceTimeSeries {
 					timeSeries.insert(thisDate, thisSurface.getImpliedVolatility(daysToExpiry, atmOffset));
 				} else {
 					Log.getLogger().warn("No volatility surface " + volatilitySurfaceName + ":" + thisDate + ":" + snapshotType);
-					if (thisDate.getDayOfWeek().equals(DayOfWeek.FRIDAY) || thisDate.getDayOfWeek().equals(DayOfWeek.SATURDAY)) {
+					if (lastSurface != null && (thisDate.getDayOfWeek().equals(DayOfWeek.FRIDAY) || thisDate.getDayOfWeek().equals(DayOfWeek.SATURDAY))) {
 						Log.getLogger().debug("Weekend - rolling forward previous volatility surface");
 						timeSeries.insert(thisDate, lastSurface.getImpliedVolatility(daysToExpiry, atmOffset));
 					}
