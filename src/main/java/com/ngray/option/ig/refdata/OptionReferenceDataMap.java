@@ -2,6 +2,7 @@ package com.ngray.option.ig.refdata;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -114,7 +115,7 @@ public class OptionReferenceDataMap {
 					(entry) -> {
 						EuropeanOption.Type callOrPut = entry.get(Attribute.CallOrPut.toString()).equals("PUT") ? Type.PUT : Type.CALL;
 						double strike = Double.parseDouble(entry.get(Attribute.Strike.toString()));
-						LocalDate expiry = LocalDate.parse(entry.get(Attribute.Expiry.toString()));
+						LocalDate expiry = parseReferenceDataExpiryDate(entry.get(Attribute.Expiry.toString()));//LocalDate.parse(entry.get(Attribute.Expiry.toString()));
 						double dividendYield = Double.parseDouble(entry.get(Attribute.DividendYield.toString()));
 						double riskFreeRate = Double.parseDouble(entry.get(Attribute.RiskFreeRate.toString()));
 						Market underlyingMarket = underlyings.get(entry.get(Attribute.UnderlyingEpic.toString()));
@@ -144,6 +145,17 @@ public class OptionReferenceDataMap {
 		referenceData.put(key, data);
 	}
 	
+	private static LocalDate parseReferenceDataExpiryDate(String expiry) {
+		switch (expiry) {
+		case "DAILY":
+			return LocalDate.now().plusDays(1);
+		case "WEEKLY":
+			int daysToAdd = DayOfWeek.SATURDAY.getValue() - LocalDate.now().getDayOfWeek().getValue();
+			return LocalDate.now().plusDays(daysToAdd);
+		default:
+			return LocalDate.parse(expiry);
+		}
+	}
 	/*
 	 * Return a list of IG market objects given a uri of the form eg.
 	 * /Indices/UK/FTSE 100

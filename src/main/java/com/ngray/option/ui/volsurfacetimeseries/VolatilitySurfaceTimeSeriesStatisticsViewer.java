@@ -36,7 +36,6 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 	public VolatilitySurfaceTimeSeriesStatisticsViewer(JFrame parentFrame, VolatilitySurfaceTimeSeriesStatistics statistics) {
 		this.parentFrame = parentFrame;
 		this.statistics = statistics;
-		//create();
 	}
 	
 	public void show() {
@@ -107,13 +106,13 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 		
 		Chart2d chart = new Chart2d();
 		chart.getAxeLayout().setXTickRenderer(new ITickRenderer() {
-
 			@Override
 			public String format(double value) {	
 				LocalDate date = LocalDate.ofEpochDay((long)value);
 				String str = date.toString();
 				return str;
 			}});
+		
 		((AxeBox)chart.getView().getAxe()).setTextRenderer(new TextBitmapRenderer()  {
 			{
 	          font = GLUT.BITMAP_HELVETICA_18;
@@ -156,10 +155,6 @@ public class VolatilitySurfaceTimeSeriesStatisticsViewer {
 			}
 		}
 		
-		/*Component canvas = (java.awt.Component) chart.getCanvas(); 
-		Border b = BorderFactory.createLineBorder(java.awt.Color.black);
-        chartPanel.setBorder(b);
-        chartPanel.add(canvas, BorderLayout.CENTER);*/
         return chart;
       }
 	

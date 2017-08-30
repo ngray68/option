@@ -19,7 +19,8 @@ public class OptionRiskLadderTableModel extends AbstractTableModel implements Ri
 	
 	private static final String[] columns = {
 			"LastUpdate",
-			"Name",
+			"Strike",
+			"Spot",
 			"Price",
 			"ImpVol",
 			"Delta",
@@ -31,14 +32,15 @@ public class OptionRiskLadderTableModel extends AbstractTableModel implements Ri
 	
 	private enum ColumnIndex {
 		LASTUPDATE(0),
-		NAME(1),
-		PRICE(2),
-		IMPVOL(3),
-		DELTA(4),
-		GAMMA(5),
-		VEGA(6),
-		THETA(7),
-		RHO(8);
+		STRIKE(1),
+		SPOT(2),
+		PRICE(3),
+		IMPVOL(4),
+		DELTA(5),
+		GAMMA(6),
+		VEGA(7),
+		THETA(8),
+		RHO(9);
 		
 		private int value;
 		
@@ -64,7 +66,8 @@ public class OptionRiskLadderTableModel extends AbstractTableModel implements Ri
 			rowIndices.put(option, i);
 			Risk risk = riskMap.get(option);
 			data[i][ColumnIndex.LASTUPDATE.toInt()] = LocalTime.now();
-			data[i][ColumnIndex.NAME.toInt()] = option.getName();
+			data[i][ColumnIndex.STRIKE.toInt()] = option.getStrike();
+			data[i][ColumnIndex.SPOT.toInt()] = risk.getUnderlyingPrice();
 			data[i][ColumnIndex.PRICE.toInt()] = risk.getPrice();
 			data[i][ColumnIndex.IMPVOL.toInt()] = risk.getImpliedVolatility();
 			data[i][ColumnIndex.DELTA.toInt()] = risk.getDelta();
@@ -93,6 +96,7 @@ public class OptionRiskLadderTableModel extends AbstractTableModel implements Ri
 		}
 		
 		data[i][ColumnIndex.LASTUPDATE.toInt()] = LocalTime.now();
+		data[i][ColumnIndex.SPOT.toInt()] = risk.getUnderlyingPrice();
 		data[i][ColumnIndex.PRICE.toInt()] = risk.getPrice();
 		data[i][ColumnIndex.IMPVOL.toInt()] = risk.getImpliedVolatility();
 		data[i][ColumnIndex.DELTA.toInt()] = risk.getDelta();
@@ -117,7 +121,8 @@ public class OptionRiskLadderTableModel extends AbstractTableModel implements Ri
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		
 		NumberFormat formatter = null;
-		switch (ColumnIndex.values()[columnIndex]) {		
+		switch (ColumnIndex.values()[columnIndex]) {
+			case SPOT:
 			case PRICE:
 			case DELTA:	
 			case VEGA:
