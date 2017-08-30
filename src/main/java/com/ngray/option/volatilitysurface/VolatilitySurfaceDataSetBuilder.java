@@ -110,7 +110,7 @@ public class VolatilitySurfaceDataSetBuilder {
 				);
 		
 		// if we are missing too many prices we throw
-		if (optionPrices.containsValue(null)) {
+		if (optionPrices.containsValue(null) || optionPrices.containsValue(Price.NaN)) {
 			prune(optionPrices, optionData);
 		}
 		
@@ -174,14 +174,14 @@ public class VolatilitySurfaceDataSetBuilder {
 		// So, for each missing price, we find all the equivalent strike offsets in optionDataSetMap and remove them
 		// as well as removing the null prices from optionPrices.
 		
-		Set<String> optionsWithNullPrices = new HashSet<>();
-		optionPrices.forEach((id, price) -> { if (price == null) optionsWithNullPrices.add(id); });
+		Set<String> optionsWithNullOrNaNPrices = new HashSet<>();
+		optionPrices.forEach((id, price) -> { if (price == null || price.equals(Price.NaN)) optionsWithNullOrNaNPrices.add(id); });
 	
 		Set<OptionData> allOptionData = new HashSet<>();
 		optionDataSetMap.forEach((underlyingId, optionDataSet) -> allOptionData.addAll(optionDataSet));
 		
 		Set<Double> strikeOffsetsToRemove = 
-				 allOptionData.stream().filter(optionData -> optionsWithNullPrices.contains(optionData.getOptionId()))
+				 allOptionData.stream().filter(optionData -> optionsWithNullOrNaNPrices.contains(optionData.getOptionId()))
 				              .map(optionData -> optionData.getAtmOffset())
 		                      .collect(Collectors.toSet());
 		

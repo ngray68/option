@@ -28,7 +28,8 @@ public class Price implements MongoObject {
 	public static final String CLOSE_COL = "Close";
 	public static final String LOW_COL = "Low";
 	public static final String HIGH_COL = "High";
-	
+	public static final Price NaN = new Price(null, null, Double.NaN, Double.NaN, Double.NaN, Double.NaN, null);
+
 	private final String id;
 	private final LocalDate valueDate;
 	private final double open;
@@ -56,6 +57,23 @@ public class Price implements MongoObject {
 		this.low = historicalPrice.getLowPrice().getMid();
 		this.high = historicalPrice.getHighPrice().getMid();		
 		this.timestamp = LocalDateTime.parse(historicalPrice.getSnapshotTimeUTC());
+	}
+	
+	@Override
+	public boolean equals(Object rhs) {
+		if (rhs == null) return false;
+		if (!(rhs instanceof Price)) return false;
+		
+		Price rhsPrice = (Price)rhs;
+		
+		if (rhsPrice == Price.NaN) {
+			return Double.isNaN(open) || Double.isNaN(close) || Double.isNaN(high) || Double.isNaN(low);
+		} else if (this == Price.NaN) {
+			return Double.isNaN(rhsPrice.getOpen()) || Double.isNaN(rhsPrice.getClose()) || Double.isNaN(rhsPrice.getLow()) || Double.isNaN(rhsPrice.getHigh());
+		}
+		
+		return id == rhsPrice.getId() && valueDate == rhsPrice.getValueDate() &&
+			   open == rhsPrice.getOpen() && close == rhsPrice.getClose() && high == rhsPrice.getHigh() && low == rhsPrice.getLow();
 	}
 	
 	@Override
@@ -119,5 +137,5 @@ public class Price implements MongoObject {
 
 	public LocalDateTime getTimestamp() {
 		return timestamp;
-	}	
+	}
 }
